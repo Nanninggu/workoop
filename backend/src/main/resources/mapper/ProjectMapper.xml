@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ptkt.mapper.ProjectMapper">
+
+    <resultMap id="projectResultMap" type="com.ptkt.model.Project">
+        <id     property="id"          column="id"/>
+        <result property="orgId"       column="org_id"/>
+        <result property="name"        column="name"/>
+        <result property="description" column="description"/>
+        <result property="ownerId"     column="owner_id"/>
+        <result property="ownerName"   column="owner_name"/>
+        <result property="taskCount"   column="task_count"/>
+        <result property="createdAt"   column="created_at"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.ptkt.model.Project" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO project (org_id, name, description, owner_id, created_at)
+        VALUES (#{orgId}, #{name}, #{description}, #{ownerId}, CURRENT_TIMESTAMP)
+    </insert>
+
+    <select id="findById" resultMap="projectResultMap">
+        SELECT p.*, u.name AS owner_name,
+               (SELECT COUNT(*) FROM task t WHERE t.project_id = p.id) AS task_count
+        FROM project p
+        LEFT JOIN users u ON p.owner_id = u.id
+        WHERE p.id = #{id}
+    </select>
+
+    <select id="findByOrgId" resultMap="projectResultMap">
+        SELECT p.*, u.name AS owner_name,
+               (SELECT COUNT(*) FROM task t WHERE t.project_id = p.id) AS task_count
+        FROM project p
+        LEFT JOIN users u ON p.owner_id = u.id
+        WHERE p.org_id = #{orgId}
+        ORDER BY p.created_at DESC
+    </select>
+
+    <update id="update" parameterType="com.ptkt.model.Project">
+        UPDATE project SET name = #{name}, description = #{description} WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM project WHERE id = #{id}
+    </delete>
+
+</mapper>

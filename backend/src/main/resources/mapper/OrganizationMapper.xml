@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ptkt.mapper.OrganizationMapper">
+
+    <resultMap id="orgResultMap" type="com.ptkt.model.Organization">
+        <id     property="id"              column="id"/>
+        <result property="name"            column="name"/>
+        <result property="slug"            column="slug"/>
+        <result property="inviteCode"      column="invite_code"/>
+        <result property="inviteExpiresAt" column="invite_expires_at"/>
+        <result property="createdAt"       column="created_at"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.ptkt.model.Organization" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO organization (name, slug, created_at)
+        VALUES (#{name}, #{slug}, CURRENT_TIMESTAMP)
+    </insert>
+
+    <select id="findById" resultMap="orgResultMap">
+        SELECT * FROM organization WHERE id = #{id}
+    </select>
+
+    <select id="findBySlug" resultMap="orgResultMap">
+        SELECT * FROM organization WHERE slug = #{slug}
+    </select>
+
+    <select id="findByInviteCode" resultMap="orgResultMap">
+        SELECT * FROM organization
+        WHERE invite_code = #{code} AND invite_expires_at > CURRENT_TIMESTAMP
+    </select>
+
+    <update id="updateInviteCode">
+        UPDATE organization
+        SET invite_code = #{inviteCode}, invite_expires_at = #{inviteExpiresAt}
+        WHERE id = #{id}
+    </update>
+
+    <select id="findByUserId" resultMap="orgResultMap">
+        SELECT o.* FROM organization o
+        INNER JOIN membership m ON o.id = m.org_id
+        WHERE m.user_id = #{userId}
+        ORDER BY m.joined_at
+    </select>
+
+</mapper>

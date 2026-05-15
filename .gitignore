@@ -1,0 +1,29 @@
+# 환경 변수 / 시크릿
+.env
+.env.local
+application-local.yml
+
+# H2 데이터베이스 파일
+data/
+
+# 빌드 산출물
+backend/target/
+frontend/node_modules/
+frontend/dist/
+
+# macOS 앱 번들
+*.dmg
+*.app
+
+# IDE
+.cursor/
+.claude/
+.idea/
+*.iml
+.vscode/
+
+# 로그
+*.log
+
+# macOS
+.DS_Store

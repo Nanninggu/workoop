@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ptkt.mapper.MembershipMapper">
+
+    <resultMap id="membershipResultMap" type="com.ptkt.model.Membership">
+        <id     property="id"        column="id"/>
+        <result property="orgId"     column="org_id"/>
+        <result property="userId"    column="user_id"/>
+        <result property="role"      column="role"/>
+        <result property="joinedAt"  column="joined_at"/>
+        <result property="userName"  column="user_name"/>
+        <result property="userEmail" column="user_email"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.ptkt.model.Membership" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO membership (org_id, user_id, role, joined_at)
+        VALUES (#{orgId}, #{userId}, #{role}, CURRENT_TIMESTAMP)
+    </insert>
+
+    <select id="findByOrgAndUser" resultMap="membershipResultMap">
+        SELECT m.*, u.name AS user_name, u.email AS user_email
+        FROM membership m
+        INNER JOIN users u ON m.user_id = u.id
+        WHERE m.org_id = #{orgId} AND m.user_id = #{userId}
+    </select>
+
+    <select id="findByOrgId" resultMap="membershipResultMap">
+        SELECT m.*, u.name AS user_name, u.email AS user_email
+        FROM membership m
+        INNER JOIN users u ON m.user_id = u.id
+        WHERE m.org_id = #{orgId}
+        ORDER BY m.joined_at
+    </select>
+
+    <select id="findByUserId" resultMap="membershipResultMap">
+        SELECT m.*, u.name AS user_name, u.email AS user_email
+        FROM membership m
+        INNER JOIN users u ON m.user_id = u.id
+        WHERE m.user_id = #{userId}
+    </select>
+
+    <update id="updateRole">
+        UPDATE membership SET role = #{role}
+        WHERE org_id = #{orgId} AND user_id = #{userId}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM membership WHERE org_id = #{orgId} AND user_id = #{userId}
+    </delete>
+
+</mapper>

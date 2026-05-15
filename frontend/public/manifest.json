@@ -1,0 +1,18 @@
+{
+  "name": "Workoop - 팀 협업 & KPI 관리",
+  "short_name": "Workoop",
+  "description": "KPI 연동 칸반, 데일리 스크럼, 번아웃 방지까지 팀 협업을 한 곳에서",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0F172A",
+  "theme_color": "#4F46E5",
+  "orientation": "landscape-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

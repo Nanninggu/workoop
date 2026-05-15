@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ptkt.mapper.TaskMapper">
+
+    <resultMap id="taskResultMap" type="com.ptkt.model.Task">
+        <id     property="id"              column="id"/>
+        <result property="projectId"       column="project_id"/>
+        <result property="title"           column="title"/>
+        <result property="description"     column="description"/>
+        <result property="assigneeId"      column="assignee_id"/>
+        <result property="status"          column="status"/>
+        <result property="priority"        column="priority"/>
+        <result property="kpiId"           column="kpi_id"/>
+        <result property="kpiContribution" column="kpi_contribution"/>
+        <result property="dueDate"         column="due_date"/>
+        <result property="estimatedHours"  column="estimated_hours"/>
+        <result property="sortOrder"       column="sort_order"/>
+        <result property="assigneeName"    column="assignee_name"/>
+        <result property="kpiName"         column="kpi_name"/>
+        <result property="kpiUnit"         column="kpi_unit"/>
+        <result property="kpiType"         column="kpi_type"/>
+        <result property="createdAt"       column="created_at"/>
+        <result property="updatedAt"       column="updated_at"/>
+    </resultMap>
+
+    <sql id="taskWithJoins">
+        t.*,
+        u.name  AS assignee_name,
+        k.name  AS kpi_name,
+        k.unit  AS kpi_unit,
+        k.kpi_type AS kpi_type
+    </sql>
+
+    <insert id="insert" parameterType="com.ptkt.model.Task" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO task (project_id, title, description, assignee_id, status, priority,
+                          kpi_id, kpi_contribution, due_date, estimated_hours, sort_order,
+                          created_at, updated_at)
+        VALUES (#{projectId}, #{title}, #{description}, #{assigneeId}, #{status}, #{priority},
+                #{kpiId}, #{kpiContribution}, #{dueDate}, #{estimatedHours}, #{sortOrder},
+                CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    </insert>
+
+    <select id="findById" resultMap="taskResultMap">
+        SELECT <include refid="taskWithJoins"/>
+        FROM task t
+        LEFT JOIN users u ON t.assignee_id = u.id
+        LEFT JOIN kpi k   ON t.kpi_id = k.id
+        WHERE t.id = #{id}
+    </select>
+
+    <!-- 조직 내 멤버별 업무 부하 집계 -->
+    <select id="getMemberWorkloadByOrgId" resultType="map">
+        SELECT
+            u.id                                                              AS userId,
+            u.name                                                            AS userName,
+            COUNT(t.id)                                                       AS totalTasks,
+            SUM(CASE WHEN t.status = 'DONE' THEN 1 ELSE 0 END)               AS doneTasks,
+            SUM(CASE WHEN t.status != 'DONE' AND t.due_date &lt; CURRENT_DATE
+                      THEN 1 ELSE 0 END)                                      AS overdueTasks,
+            COALESCE(SUM(CASE WHEN t.status != 'DONE'
+                              THEN t.estimated_hours ELSE 0 END), 0)          AS pendingHours
+        FROM users u
+        INNER JOIN membership m ON u.id = m.user_id
+        LEFT JOIN task t ON t.assignee_id = u.id
+        LEFT JOIN project p ON t.project_id = p.id AND p.org_id = #{orgId}
+        WHERE m.org_id = #{orgId}
+        GROUP BY u.id, u.name
+        ORDER BY overdueTasks DESC, pendingHours DESC
+    </select>
+
+    <select id="findByAssigneeId" resultMap="taskResultMap">
+        SELECT <include refid="taskWithJoins"/>
+        FROM task t
+        LEFT JOIN users u ON t.assignee_id = u.id
+        LEFT JOIN kpi k   ON t.kpi_id = k.id
+        WHERE t.assignee_id = #{assigneeId} AND t.status != 'DONE'
+        ORDER BY
+          CASE t.priority WHEN 'P1' THEN 1 WHEN 'P2' THEN 2 ELSE 3 END,
+          t.due_date ASC NULLS LAST,
+          t.id DESC
+    </select>
+
+    <select id="findByProjectId" resultMap="taskResultMap">
+        SELECT <include refid="taskWithJoins"/>
+        FROM task t
+        LEFT JOIN users u ON t.assignee_id = u.id
+        LEFT JOIN kpi k   ON t.kpi_id = k.id
+        WHERE t.project_id = #{projectId}
+        ORDER BY t.status, t.sort_order, t.id
+    </select>
+
+    <!-- 팀 대시보드: 기간 내 팀원별 기여도 -->
+    <select id="getMemberContributions" resultType="map">
+        SELECT
+            u.id                                                                        AS USERID,
+            u.name                                                                      AS USERNAME,
+            COUNT(t.id)                                                                 AS TOTALTASKS,
+            SUM(CASE WHEN t.status = 'DONE' THEN 1 ELSE 0 END)                         AS DONETASKS,
+            COALESCE(SUM(CASE WHEN t.status = 'DONE' THEN t.kpi_contribution ELSE 0 END), 0) AS KPICONTRIBUTION
+        FROM users u
+        INNER JOIN membership m ON u.id = m.user_id AND m.org_id = #{orgId}
+        LEFT JOIN task t ON t.assignee_id = u.id
+            AND CAST(t.updated_at AS DATE) &gt;= #{startDate}
+            AND CAST(t.updated_at AS DATE) &lt;= #{endDate}
+        LEFT JOIN project p ON t.project_id = p.id AND p.org_id = #{orgId}
+        WHERE m.org_id = #{orgId}
+        GROUP BY u.id, u.name
+        ORDER BY DONETASKS DESC, KPICONTRIBUTION DESC
+    </select>
+
+    <!-- 팀 대시보드: 일별 완료 태스크 수 (속도 차트) -->
+    <select id="getDailyVelocity" resultType="map">
+        SELECT
+            CAST(t.updated_at AS DATE)  AS DONE_DATE,
+            COUNT(*)                    AS DONE_COUNT
+        FROM task t
+        INNER JOIN project p ON t.project_id = p.id
+        WHERE p.org_id = #{orgId}
+          AND t.status = 'DONE'
+          AND CAST(t.updated_at AS DATE) &gt;= #{startDate}
+          AND CAST(t.updated_at AS DATE) &lt;= #{endDate}
+        GROUP BY CAST(t.updated_at AS DATE)
+        ORDER BY DONE_DATE
+    </select>
+
+    <update id="update" parameterType="com.ptkt.model.Task">
+        UPDATE task SET
+            title            = #{title},
+            description      = #{description},
+            assignee_id      = #{assigneeId},
+            status           = #{status},
+            priority         = #{priority},
+            kpi_id           = #{kpiId},
+            kpi_contribution = #{kpiContribution},
+            due_date         = #{dueDate},
+            estimated_hours  = #{estimatedHours},
+            sort_order       = #{sortOrder},
+            updated_at       = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateStatus">
+        UPDATE task SET status = #{status}, updated_at = CURRENT_TIMESTAMP WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM task WHERE id = #{id}
+    </delete>
+
+</mapper>

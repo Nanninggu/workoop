@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ptkt.mapper.CategoryMapper">
+
+    <resultMap id="categoryResultMap" type="com.ptkt.model.Category">
+        <id     property="id"          column="id"/>
+        <result property="name"        column="name"/>
+        <result property="color"       column="color"/>
+        <result property="icon"        column="icon"/>
+        <result property="description" column="description"/>
+        <result property="sortOrder"   column="sort_order"/>
+        <result property="ownerId"     column="owner_id"/>
+        <result property="createdAt"   column="created_at"/>
+        <result property="updatedAt"   column="updated_at"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="categoryResultMap">
+        SELECT * FROM category ORDER BY sort_order, id
+    </select>
+
+    <select id="findByOwnerIdOrGlobal" resultMap="categoryResultMap">
+        SELECT * FROM category
+        WHERE owner_id = #{ownerId} OR owner_id IS NULL
+        ORDER BY sort_order, id
+    </select>
+
+    <select id="findById" resultMap="categoryResultMap">
+        SELECT * FROM category WHERE id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="com.ptkt.model.Category" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO category (name, color, icon, description, sort_order, owner_id, created_at, updated_at)
+        VALUES (#{name}, #{color}, #{icon}, #{description}, #{sortOrder}, #{ownerId}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    </insert>
+
+    <update id="update" parameterType="com.ptkt.model.Category">
+        UPDATE category
+        SET name        = #{name},
+            color       = #{color},
+            icon        = #{icon},
+            description = #{description},
+            sort_order  = #{sortOrder},
+            updated_at  = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM category WHERE id = #{id}
+    </delete>
+
+    <select id="countKpisByCategoryId" resultType="int">
+        SELECT COUNT(*) FROM kpi WHERE category_id = #{categoryId}
+    </select>
+
+    <!-- 백업 복원용 -->
+    <delete id="deleteAll">DELETE FROM category</delete>
+
+    <insert id="insertWithId" parameterType="com.ptkt.model.Category">
+        INSERT INTO category (id, name, color, icon, description, sort_order, created_at, updated_at)
+        VALUES (#{id}, #{name}, #{color}, #{icon}, #{description}, #{sortOrder},
+                COALESCE(#{createdAt}, CURRENT_TIMESTAMP), COALESCE(#{updatedAt}, CURRENT_TIMESTAMP))
+    </insert>
+
+</mapper>

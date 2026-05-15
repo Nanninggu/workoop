@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ptkt.mapper.ScrumMapper">
+
+    <resultMap id="scrumResultMap" type="com.ptkt.model.Scrum">
+        <id     property="id"              column="id"/>
+        <result property="userId"          column="user_id"/>
+        <result property="orgId"           column="org_id"/>
+        <result property="scrumDate"       column="scrum_date"/>
+        <result property="tasksJson"       column="tasks_json"/>
+        <result property="blocker"         column="blocker"/>
+        <result property="blockerSeverity" column="blocker_severity"/>
+        <result property="energy"          column="energy"/>
+        <result property="focus"           column="focus"/>
+        <result property="userName"        column="user_name"/>
+        <result property="createdAt"       column="created_at"/>
+        <result property="updatedAt"       column="updated_at"/>
+    </resultMap>
+
+    <!-- 오늘 스크럼 저장 (있으면 UPDATE, 없으면 INSERT) -->
+    <insert id="upsert" parameterType="com.ptkt.model.Scrum">
+        MERGE INTO scrum (user_id, org_id, scrum_date, tasks_json, blocker, blocker_severity, energy, focus, updated_at)
+        KEY (user_id, scrum_date)
+        VALUES (#{userId}, #{orgId}, #{scrumDate}, #{tasksJson}, #{blocker}, #{blockerSeverity},
+                #{energy}, #{focus}, CURRENT_TIMESTAMP)
+    </insert>
+
+    <select id="findByUserAndDate" resultMap="scrumResultMap">
+        SELECT s.*, u.name AS user_name
+        FROM scrum s
+        LEFT JOIN users u ON s.user_id = u.id
+        WHERE s.user_id = #{userId} AND s.scrum_date = #{date}
+    </select>
+
+    <select id="findTeamByDate" resultMap="scrumResultMap">
+        SELECT s.*, u.name AS user_name
+        FROM scrum s
+        INNER JOIN users u ON s.user_id = u.id
+        WHERE s.org_id = #{orgId} AND s.scrum_date = #{date}
+        ORDER BY u.name
+    </select>
+
+    <!-- 내 스크럼 날짜 범위 조회 (ReviewView 에너지 추이용) -->
+    <select id="findByUserAndDateRange" resultMap="scrumResultMap">
+        SELECT s.*, u.name AS user_name
+        FROM scrum s
+        LEFT JOIN users u ON s.user_id = u.id
+        WHERE s.user_id = #{userId}
+          AND s.scrum_date &gt;= #{startDate}
+          AND s.scrum_date &lt;= #{endDate}
+        ORDER BY s.scrum_date
+    </select>
+
+    <!-- 팀 대시보드: 오늘 블로커가 있는 팀원 목록 -->
+    <select id="findActiveBlockers" resultMap="scrumResultMap">
+        SELECT s.*, u.name AS user_name
+        FROM scrum s
+        INNER JOIN users u ON s.user_id = u.id
+        WHERE s.org_id = #{orgId}
+          AND s.scrum_date = #{date}
+          AND s.blocker IS NOT NULL
+          AND TRIM(s.blocker) != ''
+        ORDER BY
+          CASE s.blocker_severity WHEN 'HIGH' THEN 1 WHEN 'MED' THEN 2 ELSE 3 END,
+          u.name
+    </select>
+
+    <!-- 팀 대시보드: 기간 내 팀원별 일별 에너지 맵 -->
+    <select id="findTeamEnergyMap" resultType="map">
+        SELECT
+            u.id           AS USERID,
+            u.name         AS USERNAME,
+            s.scrum_date   AS SCRUMDATE,
+            s.energy       AS ENERGY
+        FROM scrum s
+        INNER JOIN users u ON s.user_id = u.id
+        WHERE s.org_id = #{orgId}
+          AND s.scrum_date &gt;= #{startDate}
+          AND s.scrum_date &lt;= #{endDate}
+        ORDER BY u.name, s.scrum_date
+    </select>
+
+</mapper>

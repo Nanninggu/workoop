@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ptkt.mapper.ChatMapper">
+
+  <resultMap id="chatResultMap" type="com.ptkt.model.ChatMessage">
+    <id     property="id"        column="id"/>
+    <result property="orgId"     column="org_id"/>
+    <result property="userId"    column="user_id"/>
+    <result property="userName"  column="user_name"/>
+    <result property="content"   column="content"/>
+    <result property="createdAt" column="created_at"/>
+  </resultMap>
+
+  <select id="findRecentByOrgId" resultMap="chatResultMap">
+    SELECT c.id, c.org_id, c.user_id, u.name AS user_name, c.content, c.created_at
+    FROM chat_message c
+    JOIN users u ON u.id = c.user_id
+    WHERE c.org_id = #{orgId}
+    ORDER BY c.created_at DESC
+    LIMIT #{limit}
+  </select>
+
+  <insert id="insert" parameterType="com.ptkt.model.ChatMessage" useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO chat_message (org_id, user_id, content)
+    VALUES (#{orgId}, #{userId}, #{content})
+  </insert>
+
+</mapper>
