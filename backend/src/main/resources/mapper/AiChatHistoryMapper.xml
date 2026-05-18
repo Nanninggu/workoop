@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ptkt.mapper.AiChatHistoryMapper">
+
+  <resultMap id="aiHistoryResultMap" type="com.ptkt.model.AiChatHistory">
+    <id     property="id"        column="id"/>
+    <result property="userId"    column="user_id"/>
+    <result property="role"      column="role"/>
+    <result property="content"   column="content"/>
+    <result property="createdAt" column="created_at"/>
+  </resultMap>
+
+  <select id="findRecentByUserId" resultMap="aiHistoryResultMap">
+    SELECT id, user_id, role, content, created_at
+    FROM ai_chat_history
+    WHERE user_id = #{userId}
+    ORDER BY created_at DESC
+    LIMIT #{limit}
+  </select>
+
+  <insert id="insert" parameterType="com.ptkt.model.AiChatHistory" useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO ai_chat_history (user_id, role, content)
+    VALUES (#{userId}, #{role}, #{content})
+  </insert>
+
+</mapper>

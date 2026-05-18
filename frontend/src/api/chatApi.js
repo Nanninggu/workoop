@@ -8,5 +8,8 @@ export const chatApi = {
     api.post('/chat', { content }, { params: { orgId } }),
 
   askAi: (orgId, orgName, question) =>
-    api.post('/ai/chat', { question }, { params: { orgId, orgName } }),
+    api.post('/chat/ai', { question }, { timeout: 60000 }),
+
+  getAiHistory: (limit = 100) =>
+    api.get('/chat/ai/history', { params: { limit } }),
 }

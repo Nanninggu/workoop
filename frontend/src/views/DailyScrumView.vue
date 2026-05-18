@@ -38,6 +38,10 @@
       <button v-if="!isViewingToday" class="date-today-btn" @click="goToToday" title="오늘로 이동">
         오늘로
       </button>
+      <button class="sync-btn" @click="syncSlack" :disabled="syncing" title="Slack 메시지 자동 입력">
+        <RefreshCw :size="14" :class="{ spinning: syncing }" />
+        <span class="sync-btn-label">{{ syncing ? '동기화 중...' : 'Slack 동기화' }}</span>
+      </button>
       <button class="export-btn" @click="showExportModal = true" title="CSV 내보내기">
         <Download :size="14" />
         <span class="export-btn-label">내보내기</span>
@@ -691,12 +695,12 @@ import { useRoute } from 'vue-router'
 import {
   Check, X, Plus, AlertTriangle, ClipboardList, Zap, CalendarPlus,
   GripVertical, ChevronDown, Clock, FileText, Target, ArrowRightCircle,
-  BarChart2, ChevronLeft, ChevronRight, CalendarDays, Download, Users
+  BarChart2, ChevronLeft, ChevronRight, CalendarDays, Download, Users, RefreshCw
 } from 'lucide-vue-next'
 import { useKpiStore } from '@/store/kpiStore'
 import { useOrgStore } from '@/store/orgStore'
 import { recordApi } from '@/api/kpiApi'
-import { scrumApi } from '@/api/scrumApi'
+import { scrumApi, syncApi } from '@/api/scrumApi'
 import TeamScrumPanel from '@/components/TeamScrumPanel.vue'
 import dayjs from 'dayjs'
 import 'dayjs/locale/ko'
@@ -809,7 +813,7 @@ async function loadDayFromServer(date) {
   if (orgStore.currentOrg) {
     try {
       const res = await scrumApi.me(date)
-      const scrum = res.data?.data
+      const scrum = res.data
       if (scrum) {
         const tasks = scrum.tasksJson ? JSON.parse(scrum.tasksJson) : []
         // localStorage 캐시 갱신 (weekHistory / CSV export가 읽음)
@@ -1287,6 +1291,34 @@ function onDailyNumChange(kpi, e) {
   saveDailyKpi(kpi)
 }
 
+// ── Slack 동기화 ──
+const syncing = ref(false)
+
+async function syncSlack() {
+  if (syncing.value) return
+  syncing.value = true
+  try {
+    const orgId = orgStore.currentOrg?.id ?? null
+    const res = await syncApi.slack(orgId)
+    const msg = res.data?.message || 'Slack 동기화 완료'
+    alert(msg)
+    // loadDayFromServer는 orgStore 조건이 있으므로 직접 API 호출
+    try {
+      const scrumRes = await scrumApi.me(today.value)
+      const scrum = scrumRes.data
+      if (scrum?.tasksJson) {
+        todayTasks.value = JSON.parse(scrum.tasksJson)
+      }
+    } catch (e) {
+      console.error('스크럼 갱신 실패', e)
+    }
+  } catch (e) {
+    alert('Slack 동기화 실패: ' + (e.response?.data?.message || e.message))
+  } finally {
+    syncing.value = false
+  }
+}
+
 // ── CSV 내보내기 ──
 const showExportModal = ref(false)
 const exportFrom = ref(realToday)
@@ -1406,6 +1438,18 @@ onUnmounted(() => {
 }
 .toast-enter-active, .toast-leave-active { transition: opacity .2s, transform .2s; }
 .toast-enter-from, .toast-leave-to { opacity: 0; transform: translateY(8px); }
+
+/* ── Slack 동기화 버튼 ── */
+.sync-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 11px; border-radius: 7px; font-size: 12px; font-weight: 600;
+  border: 1px solid #4A5568; color: #A0AEC0; background: transparent;
+  cursor: pointer; transition: all .15s;
+}
+.sync-btn:hover:not(:disabled) { border-color: #4F9CF9; color: #4F9CF9; background: rgba(79,156,249,0.07); }
+.sync-btn:disabled { opacity: 0.5; cursor: default; }
+.sync-btn .spinning { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
 /* ── 내보내기 버튼 ── */
 .export-btn {

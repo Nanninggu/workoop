@@ -21,7 +21,7 @@
         </div>
 
         <template v-else>
-          <div v-if="store.messages.length === 0" class="chat-state">
+          <div v-if="(aiMode ? aiMessages.length === 0 : store.messages.length === 0)" class="chat-state">
             <MessageSquare :size="28" style="opacity:0.15" />
             <p>첫 메시지를 보내보세요</p>
           </div>
@@ -105,7 +105,7 @@
           class="chat-input"
           :placeholder="aiMode ? 'AI에게 질문하세요...' : '메시지 입력...'"
           rows="1"
-          @keydown.enter.exact.prevent="submit"
+          @keydown.enter.exact.prevent="handleEnter"
           @input="autoResize"
         />
         <button class="chat-send-btn" @click="submit" :disabled="!draft.trim() || aiLoading">
@@ -134,12 +134,13 @@ const orgStore = useOrgStore()
 const myId    = auth.user?.id
 const orgName = orgStore.currentOrg?.name
 
-const draft      = ref('')
-const listRef    = ref()
-const inputRef   = ref()
-const aiLoading  = ref(false)
-const aiMode     = ref(false)
-const aiMessages = ref([])
+const draft        = ref('')
+const listRef      = ref()
+const inputRef     = ref()
+const aiLoading    = ref(false)
+const aiMode       = ref(false)
+const aiMessages   = ref([])
+const isSubmitting = ref(false)
 
 function toggleMode() {
   aiMode.value = !aiMode.value
@@ -171,35 +172,60 @@ const groupedMessages = computed(() => {
   let lastDate = null
   let currentGroup = null
 
-  const allMessages = [...store.messages, ...aiMessages.value]
-    .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+  // AI 모드: AI 메시지만, 일반 모드: 팀 채팅 메시지만
+  const allMessages = aiMode.value
+    ? [...aiMessages.value]
+    : [...store.messages]
 
-  allMessages.forEach(msg => {
-    const dateLabel = formatDate(msg.createdAt)
-    if (dateLabel !== lastDate) {
-      lastDate = dateLabel
-      currentGroup = { date: dateLabel, messages: [] }
-      groups.push(currentGroup)
-    }
-    currentGroup.messages.push(msg)
-  })
+  allMessages
+    .slice()
+    .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+    .forEach(msg => {
+      const dateLabel = formatDate(msg.createdAt)
+      if (dateLabel !== lastDate) {
+        lastDate = dateLabel
+        currentGroup = { date: dateLabel, messages: [] }
+        groups.push(currentGroup)
+      }
+      currentGroup.messages.push(msg)
+    })
   return groups
 })
 
+function handleEnter(e) {
+  if (e.isComposing || e.keyCode === 229) return
+  submit()
+}
+
 async function submit() {
+  if (isSubmitting.value) return
   const content = draft.value.trim()
   if (!content || !orgStore.currentOrg) return
+
+  isSubmitting.value = true
   draft.value = ''
   nextTick(() => resetHeight())
 
-  if (aiMode.value) {
-    await askAi(content)
-  } else {
-    await store.sendMessage(orgStore.currentOrg.id, content)
+  try {
+    if (aiMode.value) {
+      await askAi(content)
+    } else {
+      await store.sendMessage(orgStore.currentOrg.id, content)
+    }
+  } finally {
+    isSubmitting.value = false
   }
 }
 
 async function askAi(question) {
+  // 사용자 질문 먼저 표시
+  aiMessages.value.push({
+    isAi: false,
+    userId: myId,
+    userName: '나',
+    content: question,
+    createdAt: new Date().toISOString(),
+  })
   aiLoading.value = true
   scrollBottom()
   try {
@@ -208,15 +234,18 @@ async function askAi(question) {
       orgStore.currentOrg.name,
       question
     )
+    console.log('[AI Chat] 응답:', res)
+    const answer = res?.data?.answer ?? res?.answer ?? '응답을 받지 못했습니다.'
     aiMessages.value.push({
       isAi: true,
-      content: res.data.answer,
+      content: answer,
       createdAt: new Date().toISOString(),
     })
-  } catch {
+  } catch(e) {
+    console.error('[AI Chat] 오류:', e)
     aiMessages.value.push({
       isAi: true,
-      content: '⚠️ AI 응답을 가져오는 데 실패했습니다. 잠시 후 다시 시도해주세요.',
+      content: '⚠️ AI 응답을 가져오는 데 실패했습니다: ' + (e.message || '알 수 없는 오류'),
       createdAt: new Date().toISOString(),
     })
   } finally {
@@ -244,9 +273,29 @@ function scrollBottom() {
 
 watch(() => store.messages.length, scrollBottom)
 
+async function loadAiHistory() {
+  try {
+    const res = await chatApi.getAiHistory()
+    const history = res.data ?? []
+    aiMessages.value = history.map(h => ({
+      id: h.id,
+      isAi: h.role === 'assistant',
+      userId: h.role === 'user' ? myId : null,
+      userName: h.role === 'user' ? '나' : null,
+      content: h.content,
+      createdAt: h.createdAt,
+    }))
+  } catch (e) {
+    console.warn('[AI History] 로드 실패:', e.message)
+  }
+}
+
 watch(() => props.open, async (val) => {
   if (val && orgStore.currentOrg) {
-    await store.fetchHistory(orgStore.currentOrg.id)
+    await Promise.all([
+      store.fetchHistory(orgStore.currentOrg.id),
+      loadAiHistory(),
+    ])
     store.markRead()
     scrollBottom()
     nextTick(() => inputRef.value?.focus())

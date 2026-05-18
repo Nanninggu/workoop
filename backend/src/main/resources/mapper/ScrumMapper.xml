@@ -15,16 +15,17 @@
         <result property="energy"          column="energy"/>
         <result property="focus"           column="focus"/>
         <result property="userName"        column="user_name"/>
-        <result property="createdAt"       column="created_at"/>
-        <result property="updatedAt"       column="updated_at"/>
+        <result property="createdAt"        column="created_at"/>
+        <result property="updatedAt"        column="updated_at"/>
+        <result property="lastSlackSyncAt"  column="last_slack_sync_at"/>
     </resultMap>
 
     <!-- 오늘 스크럼 저장 (있으면 UPDATE, 없으면 INSERT) -->
     <insert id="upsert" parameterType="com.ptkt.model.Scrum">
-        MERGE INTO scrum (user_id, org_id, scrum_date, tasks_json, blocker, blocker_severity, energy, focus, updated_at)
+        MERGE INTO scrum (user_id, org_id, scrum_date, tasks_json, blocker, blocker_severity, energy, focus, last_slack_sync_at, updated_at)
         KEY (user_id, scrum_date)
         VALUES (#{userId}, #{orgId}, #{scrumDate}, #{tasksJson}, #{blocker}, #{blockerSeverity},
-                #{energy}, #{focus}, CURRENT_TIMESTAMP)
+                #{energy}, #{focus}, #{lastSlackSyncAt}, CURRENT_TIMESTAMP)
     </insert>
 
     <select id="findByUserAndDate" resultMap="scrumResultMap">

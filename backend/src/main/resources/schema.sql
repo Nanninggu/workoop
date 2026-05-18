@@ -70,8 +70,10 @@ CREATE TABLE IF NOT EXISTS scrum (
     focus            VARCHAR(500),
     created_at       TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
     updated_at       TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+    last_slack_sync_at TIMESTAMP,
     UNIQUE KEY uq_scrum_user_date (user_id, scrum_date)
 );
+ALTER TABLE scrum ADD COLUMN IF NOT EXISTS last_slack_sync_at TIMESTAMP;
 
 -- 프로젝트
 CREATE TABLE IF NOT EXISTS project (
@@ -163,3 +165,13 @@ CREATE TABLE IF NOT EXISTS chat_message (
     created_at TIMESTAMP     DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS idx_chat_org ON chat_message(org_id, created_at);
+
+-- AI 채팅 히스토리 (유저별)
+CREATE TABLE IF NOT EXISTS ai_chat_history (
+    id         BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id    BIGINT        NOT NULL,
+    role       VARCHAR(10)   NOT NULL,
+    content    VARCHAR(4000) NOT NULL,
+    created_at TIMESTAMP     DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_ai_chat_user ON ai_chat_history(user_id, created_at);

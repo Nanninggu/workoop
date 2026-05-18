@@ -6,3 +6,7 @@ export const scrumApi = {
   range: (startDate, endDate) => api.get('/scrums/me/range', { params: { startDate, endDate } }),
   team:  (orgId, date)        => api.get('/scrums/team', { params: { orgId, date } }),
 }
+
+export const syncApi = {
+  slack: (orgId) => api.post('/sync/slack', { orgId }),
+}

@@ -21,6 +21,7 @@ public class Scrum {
     private String focus;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private LocalDateTime lastSlackSyncAt;
 
     // JOIN fields
     private String userName;
