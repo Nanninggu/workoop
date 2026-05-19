@@ -50,7 +50,8 @@ fi
 header "1/6  소스 코드"
 if [ -d "$INSTALL_DIR/.git" ]; then
   info "이미 설치된 저장소가 있습니다. 최신 코드로 업데이트합니다."
-  git -C "$INSTALL_DIR" pull
+  git -C "$INSTALL_DIR" fetch origin
+  git -C "$INSTALL_DIR" reset --hard origin/main
   ok "코드 업데이트 완료"
 else
   info "저장소를 클론합니다: $REPO_URL"
