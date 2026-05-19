@@ -1,0 +1,17 @@
+spring:
+  datasource:
+    url: jdbc:h2:file:/home/ubuntu/workoop-data/ptkt-db;AUTO_SERVER=TRUE;MODE=MySQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: false
+  sql:
+    init:
+      mode: always
+
+logging:
+  level:
+    com.ptkt: INFO
+    org.mybatis: WARN

@@ -3,10 +3,12 @@ package com.ptkt.controller;
 import com.ptkt.dto.ApiResponse;
 import com.ptkt.dto.KpiRecordRequest;
 import com.ptkt.model.KpiRecord;
+import com.ptkt.model.User;
 import com.ptkt.service.KpiRecordService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -21,17 +23,19 @@ public class KpiRecordController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<KpiRecord>>> getByDate(
+            @AuthenticationPrincipal User user,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         LocalDate queryDate = date != null ? date : LocalDate.now();
-        return ResponseEntity.ok(ApiResponse.ok(kpiRecordService.findByDate(queryDate)));
+        return ResponseEntity.ok(ApiResponse.ok(kpiRecordService.findByOwnerIdAndDate(user.getId(), queryDate)));
     }
 
-    /** 날짜 범위 내 전체 KPI 기록 조회 (캘린더/분석 뷰용) */
+    /** 날짜 범위 내 본인 KPI 기록 조회 (캘린더/분석 뷰용) */
     @GetMapping("/range")
     public ResponseEntity<ApiResponse<List<KpiRecord>>> getByDateRange(
+            @AuthenticationPrincipal User user,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        return ResponseEntity.ok(ApiResponse.ok(kpiRecordService.findByDateRange(startDate, endDate)));
+        return ResponseEntity.ok(ApiResponse.ok(kpiRecordService.findByOwnerIdAndDateRange(user.getId(), startDate, endDate)));
     }
 
     @GetMapping("/kpi/{kpiId}")

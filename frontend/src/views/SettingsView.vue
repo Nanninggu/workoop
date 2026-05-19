@@ -56,13 +56,7 @@
         </div>
         <div class="info-row">
           <span class="info-key">Backend API</span>
-          <a href="http://localhost:8080" target="_blank" class="info-link">http://localhost:8080</a>
-        </div>
-        <div class="info-row">
-          <span class="info-key">H2 Console</span>
-          <a href="http://localhost:8080/h2-console" target="_blank" class="info-link">
-            http://localhost:8080/h2-console
-          </a>
+          <a :href="origin + '/api'" target="_blank" class="info-link">{{ origin }}/api</a>
         </div>
       </div>
     </div>
@@ -354,6 +348,8 @@ import {
 
 const orgStore  = useOrgStore()
 const authStore = useAuthStore()
+
+const origin = window.location.origin
 
 // ── 팀 멤버 ──
 const members    = ref([])

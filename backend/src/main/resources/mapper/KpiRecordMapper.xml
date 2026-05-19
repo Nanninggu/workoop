@@ -107,6 +107,24 @@
         ORDER BY recorded_date ASC
     </select>
 
+    <!-- 현재 사용자 KPI 날짜 범위 조회 (본인 기록만) -->
+    <select id="findByOwnerIdAndDateRange" resultMap="kpiRecordResultMap">
+        SELECT kr.* FROM kpi_record kr
+        INNER JOIN kpi k ON kr.kpi_id = k.id
+        WHERE k.owner_id = #{ownerId}
+          AND kr.recorded_date BETWEEN #{startDate} AND #{endDate}
+        ORDER BY kr.recorded_date ASC
+    </select>
+
+    <!-- 현재 사용자 특정 날짜 기록 조회 -->
+    <select id="findByOwnerIdAndDate" resultMap="kpiRecordResultMap">
+        SELECT kr.* FROM kpi_record kr
+        INNER JOIN kpi k ON kr.kpi_id = k.id
+        WHERE k.owner_id = #{ownerId}
+          AND kr.recorded_date = #{date}
+        ORDER BY kr.id DESC
+    </select>
+
     <!-- 전체 기록 (백업용) -->
     <select id="findAll" resultMap="kpiRecordResultMap">
         SELECT * FROM kpi_record ORDER BY id ASC

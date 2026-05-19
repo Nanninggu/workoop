@@ -238,7 +238,7 @@ async function load() {
   loading.value = true
   try {
     const res = await api.get('/team-dashboard', { params: { orgId, period: period.value } })
-    data.value = res.data.data
+    data.value = res.data
   } finally {
     loading.value = false
   }
@@ -370,7 +370,7 @@ function rateColor(rate) {
 </script>
 
 <style scoped>
-.page-container { padding: 24px 28px; max-width: 1300px; margin: 0 auto; }
+.page-container { padding: 24px 28px; }
 
 /* 헤더 */
 .td-header {

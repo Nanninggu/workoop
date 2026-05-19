@@ -95,9 +95,9 @@
 
         <!-- 오늘 할 일 목록 (펼치기) -->
         <div class="msc-task-list" v-if="expanded[idx]">
-          <div v-for="t in m.tasks" :key="t.id || t.text" class="msc-task-item">
+          <div v-for="t in m.tasks" :key="t.id || t.title || t.text" class="msc-task-item">
             <span class="task-dot" :class="{ done: t.done }">{{ t.done ? '✓' : '○' }}</span>
-            <span :class="{ 'task-done': t.done }">{{ t.text }}</span>
+            <span :class="{ 'task-done': t.done }">{{ t.title || t.text }}</span>
           </div>
         </div>
         <button class="btn-expand" @click="toggleExpand(idx)">

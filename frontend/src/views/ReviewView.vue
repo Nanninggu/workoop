@@ -280,6 +280,7 @@ import { ref, computed, reactive, onMounted } from 'vue'
 import { useKpiStore } from '@/store/kpiStore'
 import { useBurnoutStore } from '@/store/burnoutStore'
 import { scrumApi } from '@/api/scrumApi'
+import { reviewApi } from '@/api/reviewApi'
 import { ElMessage } from 'element-plus'
 import dayjs from 'dayjs'
 import isoWeek from 'dayjs/plugin/isoWeek'
@@ -304,7 +305,7 @@ async function loadEnergyFromServer() {
     const start = dayjs().subtract(13, 'day').format('YYYY-MM-DD')
     const res   = await scrumApi.range(start, end)
     const map   = {}
-    for (const s of (res.data?.data || [])) {
+    for (const s of (res.data || [])) {
       map[s.scrumDate] = s.energy || 0
     }
     serverEnergyMap.value = map
@@ -356,59 +357,58 @@ const monthlyForm = reactive({
   memo: '', selfScore: 3
 })
 
-// localStorage 기반 회고 기록
-const STORAGE_KEY = 'workoop-reviews'
+// 회고 기록 (서버)
 const reviews = ref([])
 
-function loadReviews() {
+async function loadReviews() {
   try {
-    reviews.value = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
-      .sort((a, b) => b.id - a.id)
-  } catch {
-    reviews.value = []
-  }
-}
-
-function saveReviews() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(reviews.value))
+    const res = await reviewApi.list()
+    reviews.value = (res.data || []).map(r => ({
+      ...r,
+      savedAt: r.savedAt ? dayjs(r.savedAt).format('YYYY-MM-DD HH:mm') : '',
+      nextGoals: r.nextGoals ? JSON.parse(r.nextGoals) : [],
+      selfScore: r.selfScore || 3
+    }))
+  } catch { ElMessage.error('회고 기록 로드 실패') }
 }
 
 async function saveWeeklyReview() {
   saving.value = true
-  await new Promise(r => setTimeout(r, 300))
-  const review = {
-    id: Date.now(),
-    type: 'weekly',
-    period: weekLabel.value,
-    savedAt: dayjs().format('YYYY-MM-DD HH:mm'),
-    ...weeklyForm
-  }
-  reviews.value.unshift(review)
-  saveReviews()
-  ElMessage.success('주간 회고가 저장되었습니다!')
-  saving.value = false
+  try {
+    await reviewApi.create({
+      type: 'weekly', period: weekLabel.value,
+      plans: weeklyForm.plans, progress: weeklyForm.progress,
+      problems: weeklyForm.problems, memo: weeklyForm.memo,
+      selfScore: weeklyForm.selfScore
+    })
+    await loadReviews()
+    ElMessage.success('주간 회고가 저장되었습니다!')
+    clearWeeklyForm()
+  } catch { ElMessage.error('저장에 실패했습니다.') } finally { saving.value = false }
 }
 
 async function saveMonthlyReview() {
   saving.value = true
-  await new Promise(r => setTimeout(r, 300))
-  const review = {
-    id: Date.now(),
-    type: 'monthly',
-    period: monthLabel.value,
-    savedAt: dayjs().format('YYYY-MM-DD HH:mm'),
-    ...monthlyForm,
-    nextGoals: [...monthlyForm.nextGoals].filter(g => g.trim())
-  }
-  reviews.value.unshift(review)
-  saveReviews()
-  ElMessage.success('월간 회고가 저장되었습니다!')
-  saving.value = false
+  try {
+    const goals = monthlyForm.nextGoals.filter(g => g.trim())
+    await reviewApi.create({
+      type: 'monthly', period: monthLabel.value,
+      bestAchievement: monthlyForm.bestAchievement,
+      regrets: monthlyForm.regrets,
+      nextGoals: JSON.stringify(goals),
+      memo: monthlyForm.memo, selfScore: monthlyForm.selfScore
+    })
+    await loadReviews()
+    ElMessage.success('월간 회고가 저장되었습니다!')
+    clearMonthlyForm()
+  } catch { ElMessage.error('저장에 실패했습니다.') } finally { saving.value = false }
 }
 
-function deleteReview(id) {
-  reviews.value = reviews.value.filter(r => r.id !== id)
-  saveReviews()
+async function deleteReview(id) {
+  try {
+    await reviewApi.delete(id)
+    await loadReviews()
+  } catch { ElMessage.error('삭제에 실패했습니다.') }
 }
 
 function clearWeeklyForm() {
@@ -419,8 +419,8 @@ function clearMonthlyForm() {
   Object.assign(monthlyForm, { bestAchievement: '', regrets: '', nextGoals: ['', '', ''], memo: '', selfScore: 3 })
 }
 
-onMounted(() => {
-  loadReviews()
+onMounted(async () => {
+  await loadReviews()
   store.fetchDashboard()
   loadEnergyFromServer()
 })
@@ -555,11 +555,11 @@ onMounted(() => {
   padding: 18px 20px; margin-bottom: 20px; box-shadow: var(--shadow-xs);
 }
 .ehc-title {
-  font-size: 0.875rem; font-weight: 700; color: var(--text-primary); margin-bottom: 16px;
+  font-size: 0.875rem; font-weight: 700; color: var(--text-primary); margin-bottom: 32px;
   display: flex; align-items: center; gap: 8px;
 }
 .ehc-hint { font-size: 0.75rem; color: var(--text-muted); font-weight: 400; }
-.ehc-bars { display: flex; gap: 8px; align-items: flex-end; height: 80px; margin-bottom: 8px; }
+.ehc-bars { display: flex; gap: 8px; align-items: flex-end; height: 100px; margin-bottom: 8px; }
 .ehc-day { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
 .ehc-bar-wrap {
   flex: 1; width: 100%; max-width: 40px; background: var(--bg-hover);

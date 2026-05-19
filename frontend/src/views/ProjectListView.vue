@@ -74,7 +74,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useOrgStore } from '@/store/orgStore'
 import { projectApi } from '@/api/projectApi'
@@ -135,6 +135,7 @@ async function deleteProject(p) {
 }
 
 onMounted(load)
+watch(() => orgStore.currentOrg?.id, (id) => { if (id) load() })
 </script>
 
 <style scoped>

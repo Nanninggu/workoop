@@ -268,8 +268,10 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useKpiStore } from '@/store/kpiStore'
+import { starApi } from '@/api/starApi'
+import { ElMessage } from 'element-plus'
 import { Star, Plus, Search, X, Trash2, Link2, Save, Lightbulb } from 'lucide-vue-next'
 import dayjs from 'dayjs'
 
@@ -333,17 +335,19 @@ const STAR_FIELDS = [
   },
 ]
 
-// ── localStorage ──
-const STORAGE_KEY = 'workoop-star-stories'
+const stories = ref([])
+const loading = ref(false)
 
-function loadStories() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [] } catch { return [] }
+async function loadStories() {
+  try {
+    loading.value = true
+    const res = await starApi.list()
+    stories.value = (res.data || []).map(s => ({
+      ...s,
+      updatedAt: s.updatedAt ? dayjs(s.updatedAt).format('YYYY-MM-DD') : dayjs().format('YYYY-MM-DD')
+    }))
+  } catch { ElMessage.error('STAR 노트 로드 실패') } finally { loading.value = false }
 }
-function saveStories(arr) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(arr))
-}
-
-const stories = ref(loadStories())
 
 // ── 필터 ──
 const searchQ  = ref('')
@@ -413,32 +417,39 @@ function closeModal() {
   modalOpen.value = false
 }
 
-function saveStory() {
+async function saveStory() {
   if (!form.value.title.trim()) return
-  const now = dayjs().format('YYYY-MM-DD')
-
-  if (editingId.value) {
-    stories.value = stories.value.map(s =>
-      s.id === editingId.value ? { ...form.value, id: s.id, createdAt: s.createdAt, updatedAt: now } : s
-    )
-  } else {
-    stories.value = [
-      ...stories.value,
-      { ...form.value, id: Date.now().toString(), createdAt: now, updatedAt: now }
-    ]
-  }
-  saveStories(stories.value)
-  closeModal()
+  try {
+    const payload = {
+      title: form.value.title, lpTag: form.value.lpTag, kpiId: form.value.kpiId || null,
+      situation: form.value.situation, task: form.value.task,
+      action: form.value.action, result: form.value.result
+    }
+    if (editingId.value) {
+      await starApi.update(editingId.value, payload)
+    } else {
+      await starApi.create(payload)
+    }
+    await loadStories()
+    closeModal()
+  } catch { ElMessage.error('저장에 실패했습니다.') }
 }
 
 // ── 삭제 ──
 const deleteTarget = ref(null)
 function confirmDelete(story) { deleteTarget.value = story }
-function doDelete() {
-  stories.value = stories.value.filter(s => s.id !== deleteTarget.value.id)
-  saveStories(stories.value)
-  deleteTarget.value = null
+async function doDelete() {
+  try {
+    await starApi.delete(deleteTarget.value.id)
+    await loadStories()
+    deleteTarget.value = null
+  } catch { ElMessage.error('삭제에 실패했습니다.') }
 }
+
+onMounted(() => {
+  loadStories()
+  store.fetchKpis?.()
+})
 </script>
 
 <style scoped>

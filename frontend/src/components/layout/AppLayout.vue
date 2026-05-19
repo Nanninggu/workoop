@@ -33,7 +33,7 @@
       </nav>
 
       <!-- 팀 멤버 아바타 미니 표시 -->
-      <div v-if="teamMembers.length > 0" class="sidebar-members">
+      <div v-if="teamMembers.length > 0 && !sidebarCollapsed" class="sidebar-members">
         <div
           v-for="(m, i) in teamMembers.slice(0, 5)"
           :key="m.userId"
@@ -142,7 +142,7 @@
             <Moon v-if="!isDark" :size="16" />
             <Sun v-else :size="16" />
           </button>
-          <div class="user-avatar" @click="handleLogout" :title="`${authStore.user?.name} — 로그아웃`">
+          <div class="user-avatar" @click="profileModalOpen = true" :title="`${authStore.user?.name} 내 정보`">
             {{ userInitial }}
           </div>
         </div>
@@ -160,6 +160,62 @@
 
     <!-- 알림 패널 -->
     <NotificationPanel :open="notifPanelOpen" @close="notifPanelOpen = false" />
+
+    <!-- 내 정보 모달 -->
+    <div v-if="profileModalOpen" class="profile-modal-overlay" @click.self="profileModalOpen = false">
+      <div class="profile-modal">
+        <button class="profile-close" @click="profileModalOpen = false" title="닫기">×</button>
+
+        <div class="profile-head">
+          <div class="profile-avatar-lg">{{ userInitial }}</div>
+          <div class="profile-name">{{ authStore.user?.name || '이름 없음' }}</div>
+          <div class="profile-email">{{ authStore.user?.email || '' }}</div>
+        </div>
+
+        <div class="profile-section">
+          <div class="profile-section-title">소속 조직</div>
+          <div v-if="orgStore.orgs.length === 0" class="profile-empty">가입된 조직이 없습니다</div>
+          <div v-else class="profile-org-list">
+            <div
+              v-for="o in orgStore.orgs"
+              :key="o.id"
+              class="profile-org-item"
+              :class="{ active: o.id === orgStore.currentOrg?.id }"
+              :title="o.id === orgStore.currentOrg?.id ? '현재 보고 있는 조직' : '클릭하여 이 조직으로 전환'"
+              @click="switchOrg(o)"
+            >
+              <div class="profile-org-info">
+                <div class="profile-org-name">{{ o.name }}</div>
+                <div class="profile-org-slug">@{{ o.slug }}</div>
+              </div>
+              <span class="profile-org-role" :class="`role-${(o.role || 'MEMBER').toLowerCase()}`">
+                {{ o.role || 'MEMBER' }}
+              </span>
+              <span v-if="o.id === orgStore.currentOrg?.id" class="profile-org-current">현재</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="profile-section">
+          <div class="profile-section-title">계정 정보</div>
+          <div class="profile-info-rows">
+            <div class="profile-info-row">
+              <span class="profile-info-label">사용자 ID</span>
+              <span class="profile-info-val">#{{ authStore.user?.id }}</span>
+            </div>
+            <div class="profile-info-row">
+              <span class="profile-info-label">이메일</span>
+              <span class="profile-info-val">{{ authStore.user?.email }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="profile-actions">
+          <button class="profile-btn-secondary" @click="goToSettings">설정 페이지로 이동</button>
+          <button class="profile-btn-logout" @click="handleLogout">로그아웃</button>
+        </div>
+      </div>
+    </div>
 
     <!-- 채팅 FAB -->
     <transition name="fab-pop">
@@ -261,6 +317,22 @@ const notifStore  = useNotificationStore()
 const wsStore     = useWsStore()
 const chatStore   = useChatStore()
 const notifPanelOpen = ref(false)
+const profileModalOpen = ref(false)
+
+function goToSettings() {
+  profileModalOpen.value = false
+  router.push('/settings')
+}
+
+function switchOrg(org) {
+  if (!org || org.id === orgStore.currentOrg?.id) {
+    profileModalOpen.value = false
+    return
+  }
+  orgStore.setCurrentOrg(org)
+  // stale data 방지를 위해 전체 리로드 (모든 store/WS가 새 orgId로 재초기화됨)
+  window.location.href = '/dashboard'
+}
 const chatOpen    = ref(false)
 
 function toggleChat() {
@@ -286,16 +358,26 @@ function handleLogout() {
   }
 }
 
+// 레이아웃 레벨 WS 핸들러 unsubscribe 추적 (중복 등록 방지)
+const _wsLayoutUnsubs = []
+
 function _initWs() {
   const token = authStore.token
   const orgId = orgStore.currentOrg?.id
   if (!token || !orgId) return
+
+  // 기존 핸들러 제거 후 재등록 (중복 방지)
+  _wsLayoutUnsubs.forEach(fn => fn())
+  _wsLayoutUnsubs.length = 0
+
   wsStore.connect(token, orgId)
-  wsStore.on('NOTIFICATION',  e => notifStore.handleWsNotification(e))
-  wsStore.on('CHAT_MESSAGE',  e => {
-    chatStore.appendMessage(e.payload)
-    if (!chatOpen.value) chatStore.incrementUnread()
-  })
+  _wsLayoutUnsubs.push(
+    wsStore.on('NOTIFICATION', e => notifStore.handleWsNotification(e)),
+    wsStore.on('CHAT_MESSAGE', e => {
+      chatStore.appendMessage(e.payload)
+      if (!chatOpen.value) chatStore.incrementUnread()
+    })
+  )
 }
 
 const sidebarCollapsed = ref(false)
@@ -425,12 +507,19 @@ function onGsKeydown(e) {
 }
 
 onUnmounted(() => {
+  _wsLayoutUnsubs.forEach(fn => fn())
   wsStore.disconnect()
   notifStore.stopPolling()
 })
 
-onMounted(() => {
+onMounted(async () => {
   applyDark()
+  // 조직 목록을 가장 먼저 로드 (KPI/팀멤버/WS 모두 currentOrg에 의존)
+  try {
+    await orgStore.fetchOrgs()
+  } catch (e) {
+    console.warn('[AppLayout] 조직 목록 로드 실패', e)
+  }
   store.fetchKpis()
   store.fetchCategories()
   loadTeamMembers()
@@ -948,4 +1037,144 @@ onMounted(() => {
   opacity: 0;
   transform: scale(0.7);
 }
+
+/* ============ 내 정보 모달 ============ */
+.profile-modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999;
+  animation: profile-fade 0.18s ease-out;
+}
+@keyframes profile-fade { from { opacity: 0 } to { opacity: 1 } }
+
+.profile-modal {
+  position: relative;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18);
+  width: 420px; max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 64px);
+  overflow-y: auto;
+  padding: 28px 24px 20px;
+  animation: profile-slide 0.22s ease-out;
+}
+@keyframes profile-slide {
+  from { opacity: 0; transform: translateY(-12px) scale(0.98) }
+  to { opacity: 1; transform: translateY(0) scale(1) }
+}
+
+.profile-close {
+  position: absolute; top: 10px; right: 12px;
+  width: 28px; height: 28px; border-radius: 50%;
+  border: none; background: transparent;
+  font-size: 1.4rem; line-height: 1; color: var(--text-muted);
+  cursor: pointer; transition: all var(--transition-fast);
+}
+.profile-close:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+.profile-head { text-align: center; padding: 4px 0 18px; }
+.profile-avatar-lg {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  margin: 0 auto 12px;
+  background: linear-gradient(135deg, #6366F1, #8B5CF6);
+  color: white;
+  font-size: 1.6rem; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.35);
+}
+.profile-name { font-size: 1.15rem; font-weight: 800; color: var(--text-primary); }
+.profile-email { font-size: 0.85rem; color: var(--text-muted); margin-top: 2px; }
+
+.profile-section {
+  border-top: 1px solid var(--border-color);
+  padding: 16px 0 4px;
+}
+.profile-section-title {
+  font-size: 0.72rem; font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.04em;
+  margin-bottom: 10px;
+}
+
+.profile-org-list { display: flex; flex-direction: column; gap: 8px; }
+.profile-org-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--bg-app);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+.profile-org-item:hover {
+  border-color: var(--color-project);
+  background: var(--bg-hover);
+  transform: translateY(-1px);
+}
+.profile-org-item.active {
+  border-color: var(--color-project);
+  background: rgba(79, 70, 229, 0.05);
+  cursor: default;
+}
+.profile-org-item.active:hover {
+  transform: none;
+  background: rgba(79, 70, 229, 0.05);
+}
+.profile-org-info { flex: 1; min-width: 0; }
+.profile-org-name {
+  font-size: 0.92rem; font-weight: 700; color: var(--text-primary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.profile-org-slug { font-size: 0.74rem; color: var(--text-muted); margin-top: 1px; }
+.profile-org-role {
+  font-size: 0.68rem; font-weight: 700;
+  padding: 3px 8px; border-radius: 99px;
+  letter-spacing: 0.03em;
+}
+.role-owner { background: rgba(234, 88, 12, 0.12); color: #C2410C; }
+.role-admin { background: rgba(99, 102, 241, 0.12); color: #4F46E5; }
+.role-member { background: var(--bg-hover); color: var(--text-secondary); }
+.profile-org-current {
+  font-size: 0.68rem; font-weight: 700;
+  color: var(--color-project);
+  background: rgba(79, 70, 229, 0.1);
+  padding: 3px 8px; border-radius: 99px;
+}
+.profile-empty {
+  text-align: center; font-size: 0.85rem;
+  color: var(--text-muted); padding: 12px 0;
+}
+
+.profile-info-rows { display: flex; flex-direction: column; gap: 8px; }
+.profile-info-row {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 0.85rem;
+  padding: 8px 12px;
+  background: var(--bg-app);
+  border-radius: 8px;
+}
+.profile-info-label { color: var(--text-secondary); }
+.profile-info-val { color: var(--text-primary); font-weight: 600; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; }
+
+.profile-actions {
+  display: flex; gap: 8px;
+  padding-top: 18px; margin-top: 4px;
+  border-top: 1px solid var(--border-color);
+}
+.profile-btn-secondary, .profile-btn-logout {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 0.88rem; font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border: 1px solid var(--border-color);
+}
+.profile-btn-secondary { background: var(--bg-card); color: var(--text-primary); }
+.profile-btn-secondary:hover { background: var(--bg-hover); border-color: var(--color-project); color: var(--color-project); }
+.profile-btn-logout { background: var(--color-danger); color: white; border-color: var(--color-danger); }
+.profile-btn-logout:hover { filter: brightness(1.08); }
 </style>

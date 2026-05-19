@@ -49,6 +49,17 @@ public interface KpiRecordMapper {
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate);
 
+    /** 현재 사용자의 KPI 날짜 범위 기록 조회 (캘린더/분석 뷰용 — 본인 기록만) */
+    List<KpiRecord> findByOwnerIdAndDateRange(
+            @Param("ownerId") Long ownerId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate);
+
+    /** 현재 사용자의 특정 날짜 기록 조회 */
+    List<KpiRecord> findByOwnerIdAndDate(
+            @Param("ownerId") Long ownerId,
+            @Param("date") LocalDate date);
+
     /** 전체 기록 (백업 내보내기용) */
     List<KpiRecord> findAll();
 

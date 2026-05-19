@@ -11,8 +11,12 @@ export const useOrgStore = defineStore('org', () => {
   async function fetchOrgs() {
     const res = await orgApi.list()
     orgs.value = res.data
-    if (!currentOrg.value && orgs.value.length > 0) {
+    const stillValid = currentOrg.value && orgs.value.some(o => o.id === currentOrg.value.id)
+    if (!stillValid && orgs.value.length > 0) {
       setCurrentOrg(orgs.value[0])
+    } else if (!stillValid) {
+      currentOrg.value = null
+      localStorage.removeItem('coop-current-org')
     }
   }
 

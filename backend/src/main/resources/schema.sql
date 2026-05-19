@@ -39,6 +39,7 @@ ALTER TABLE organization ADD COLUMN IF NOT EXISTS invite_code       VARCHAR(8);
 ALTER TABLE organization ADD COLUMN IF NOT EXISTS invite_expires_at TIMESTAMP;
 ALTER TABLE category  ADD COLUMN IF NOT EXISTS owner_id BIGINT;
 ALTER TABLE kpi       ADD COLUMN IF NOT EXISTS owner_id BIGINT;
+ALTER TABLE task      ADD COLUMN IF NOT EXISTS assignee_ids VARCHAR(500);
 ALTER TABLE kpi       ADD COLUMN IF NOT EXISTS org_id   BIGINT;
 ALTER TABLE kpi       ADD COLUMN IF NOT EXISTS scope    VARCHAR(20) DEFAULT 'PERSONAL';
 ALTER TABLE kpi_record ADD COLUMN IF NOT EXISTS owner_id BIGINT;
@@ -175,3 +176,38 @@ CREATE TABLE IF NOT EXISTS ai_chat_history (
     created_at TIMESTAMP     DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS idx_ai_chat_user ON ai_chat_history(user_id, created_at);
+
+-- STAR 노트 (AWS 리더십 원칙 기반 경험 스토리)
+CREATE TABLE IF NOT EXISTS star_note (
+    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id     BIGINT        NOT NULL,
+    title       VARCHAR(200)  NOT NULL,
+    lp_tag      VARCHAR(50),
+    kpi_id      BIGINT,
+    situation   CLOB,
+    task        CLOB,
+    action      CLOB,
+    result      CLOB,
+    created_at  TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+    updated_at  TIMESTAMP     DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_star_note_user ON star_note(user_id, updated_at);
+
+-- 회고 기록 (주간/월간)
+-- type: weekly, monthly
+CREATE TABLE IF NOT EXISTS review (
+    id               BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id          BIGINT        NOT NULL,
+    type             VARCHAR(10)   NOT NULL,
+    period           VARCHAR(50),
+    plans            CLOB,
+    progress         CLOB,
+    problems         CLOB,
+    best_achievement CLOB,
+    regrets          CLOB,
+    next_goals       VARCHAR(2000),
+    memo             CLOB,
+    self_score       INT           DEFAULT 3,
+    saved_at         TIMESTAMP     DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_review_user ON review(user_id, saved_at);

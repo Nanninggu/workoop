@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ptkt.mapper.StarNoteMapper">
+
+    <resultMap id="starNoteResultMap" type="com.ptkt.model.StarNote">
+        <id     property="id"        column="id"/>
+        <result property="userId"    column="user_id"/>
+        <result property="title"     column="title"/>
+        <result property="lpTag"     column="lp_tag"/>
+        <result property="kpiId"     column="kpi_id"/>
+        <result property="situation" column="situation"/>
+        <result property="task"      column="task"/>
+        <result property="action"    column="action"/>
+        <result property="result"    column="result"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findByUser" resultMap="starNoteResultMap">
+        SELECT * FROM star_note
+        WHERE user_id = #{userId}
+        ORDER BY updated_at DESC
+    </select>
+
+    <select id="findById" resultMap="starNoteResultMap">
+        SELECT * FROM star_note WHERE id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="com.ptkt.model.StarNote" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO star_note (user_id, title, lp_tag, kpi_id, situation, task, action, result, created_at, updated_at)
+        VALUES (#{userId}, #{title}, #{lpTag}, #{kpiId}, #{situation}, #{task}, #{action}, #{result},
+                CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    </insert>
+
+    <update id="update" parameterType="com.ptkt.model.StarNote">
+        UPDATE star_note
+        SET title = #{title}, lp_tag = #{lpTag}, kpi_id = #{kpiId},
+            situation = #{situation}, task = #{task}, action = #{action}, result = #{result},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id} AND user_id = #{userId}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM star_note WHERE id = #{id} AND user_id = #{userId}
+    </delete>
+
+</mapper>

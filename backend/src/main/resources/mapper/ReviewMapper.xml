@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ptkt.mapper.ReviewMapper">
+
+    <resultMap id="reviewResultMap" type="com.ptkt.model.Review">
+        <id     property="id"              column="id"/>
+        <result property="userId"          column="user_id"/>
+        <result property="type"            column="type"/>
+        <result property="period"          column="period"/>
+        <result property="plans"           column="plans"/>
+        <result property="progress"        column="progress"/>
+        <result property="problems"        column="problems"/>
+        <result property="bestAchievement" column="best_achievement"/>
+        <result property="regrets"         column="regrets"/>
+        <result property="nextGoals"       column="next_goals"/>
+        <result property="memo"            column="memo"/>
+        <result property="selfScore"       column="self_score"/>
+        <result property="savedAt"         column="saved_at"/>
+    </resultMap>
+
+    <select id="findByUser" resultMap="reviewResultMap">
+        SELECT * FROM review
+        WHERE user_id = #{userId}
+        ORDER BY saved_at DESC
+    </select>
+
+    <insert id="insert" parameterType="com.ptkt.model.Review" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO review (user_id, type, period, plans, progress, problems,
+                            best_achievement, regrets, next_goals, memo, self_score, saved_at)
+        VALUES (#{userId}, #{type}, #{period}, #{plans}, #{progress}, #{problems},
+                #{bestAchievement}, #{regrets}, #{nextGoals}, #{memo}, #{selfScore}, CURRENT_TIMESTAMP)
+    </insert>
+
+    <delete id="delete">
+        DELETE FROM review WHERE id = #{id} AND user_id = #{userId}
+    </delete>
+
+</mapper>

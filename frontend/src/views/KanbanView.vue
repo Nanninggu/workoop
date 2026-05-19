@@ -41,7 +41,7 @@
           item-key="id"
           class="col-body"
           ghost-class="task-ghost"
-          @end="(evt) => onDragEnd(evt, col.status)"
+          @change="(evt) => onDragChange(evt, col.status)"
         >
           <template #item="{ element: task }">
             <div class="task-card" @click="openTaskForm(task, col.status)">
@@ -64,8 +64,16 @@
                   <span v-if="task.dueDate" class="task-due" :class="{ overdue: isDueOver(task.dueDate) }">
                     <Calendar :size="11" /> {{ formatDate(task.dueDate) }}
                   </span>
-                  <div class="task-assignee" v-if="task.assigneeName" :title="task.assigneeName">
-                    {{ task.assigneeName.charAt(0).toUpperCase() }}
+                  <div class="task-assignees">
+                    <div
+                      v-for="(uid, i) in parseAssigneeIds(task.assigneeIds, task.assigneeId)"
+                      :key="uid"
+                      class="task-assignee"
+                      :style="{ marginLeft: i > 0 ? '-6px' : '0', zIndex: 10 - i }"
+                      :title="memberName(uid)"
+                    >
+                      {{ memberInitial(uid) }}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -116,11 +124,19 @@
             </div>
 
             <div class="field-group">
-              <label>담당자</label>
-              <select v-model="taskForm.assigneeId" class="field-select">
-                <option :value="null">담당자 없음</option>
-                <option v-for="m in members" :key="m.userId" :value="m.userId">{{ m.userName }}</option>
-              </select>
+              <label>담당자 <span class="label-hint">(복수 선택 가능)</span></label>
+              <div class="assignee-multi">
+                <div
+                  v-for="m in members"
+                  :key="m.userId"
+                  class="assignee-chip"
+                  :class="{ selected: taskForm.assigneeIds.includes(m.userId) }"
+                  @click="toggleAssignee(m.userId)"
+                >
+                  <span class="chip-avatar">{{ m.userName.charAt(0) }}</span>
+                  {{ m.userName }}
+                </div>
+              </div>
             </div>
 
             <div class="field-group kpi-link-group">
@@ -214,9 +230,29 @@ const columns = [
 
 const emptyForm = () => ({
   title: '', description: '', status: 'BACKLOG', priority: 'P2',
-  assigneeId: null, kpiId: null, kpiContribution: null,
+  assigneeIds: [], assigneeId: null, kpiId: null, kpiContribution: null,
   dueDate: null, estimatedHours: null,
 })
+
+function parseAssigneeIds(idsJson, fallbackId) {
+  if (idsJson) {
+    try { return JSON.parse(idsJson) } catch { /* fall through */ }
+  }
+  return fallbackId ? [fallbackId] : []
+}
+function memberName(uid) {
+  return members.value.find(m => m.userId === uid)?.userName || String(uid)
+}
+function memberInitial(uid) {
+  return memberName(uid).charAt(0)
+}
+function toggleAssignee(uid) {
+  const ids = taskForm.value.assigneeIds
+  const idx = ids.indexOf(uid)
+  if (idx === -1) ids.push(uid)
+  else ids.splice(idx, 1)
+  taskForm.value.assigneeId = ids[0] ?? null
+}
 const taskForm = ref(emptyForm())
 
 const tasksByStatus = computed(() => {
@@ -285,11 +321,12 @@ async function load() {
 function openTaskForm(task, defaultStatus) {
   if (task) {
     editingTask.value = task
+    const ids = parseAssigneeIds(task.assigneeIds, task.assigneeId)
     taskForm.value = {
       title: task.title, description: task.description,
       status: task.status, priority: task.priority,
-      assigneeId: task.assigneeId, kpiId: task.kpiId,
-      kpiContribution: task.kpiContribution,
+      assigneeIds: ids, assigneeId: ids[0] ?? null,
+      kpiId: task.kpiId, kpiContribution: task.kpiContribution,
       dueDate: task.dueDate, estimatedHours: task.estimatedHours,
     }
   } else {
@@ -305,9 +342,12 @@ async function saveTask() {
   if (!taskForm.value.title?.trim()) return
   saving.value = true
   try {
+    const ids = taskForm.value.assigneeIds
     const payload = {
       ...taskForm.value,
       projectId: Number(route.params.id),
+      assigneeId: ids[0] ?? null,
+      assigneeIds: ids.length > 0 ? JSON.stringify(ids) : null,
       kpiContribution: taskForm.value.kpiContribution || null,
       estimatedHours: taskForm.value.estimatedHours || null,
     }
@@ -341,13 +381,12 @@ async function deleteTask() {
 }
 
 // 드래그앤드롭 완료 시 상태 변경 (KPI 자동 반영 포함)
-async function onDragEnd(evt, targetStatus) {
-  const taskId = evt.item?._underlying_vm_?.id
-  if (!taskId) return
-  const task = tasks.value.find(t => t.id === taskId)
+async function onDragChange(evt, targetStatus) {
+  if (!evt.added) return  // 이 컬럼에 카드가 추가됐을 때만 처리
+  const task = evt.added.element
   if (!task || task.status === targetStatus) return
   try {
-    await taskApi.changeStatus(taskId, targetStatus)
+    await taskApi.changeStatus(task.id, targetStatus)
     task.status = targetStatus
     if (targetStatus === 'DONE' && task.kpiId && task.kpiContribution) {
       ElMessage.success(`✅ "${task.kpiName}" KPI에 ${task.kpiContribution}${task.kpiUnit || ''} 반영됨!`)
@@ -474,11 +513,41 @@ onUnmounted(() => {
 .task-footer { display: flex; align-items: center; justify-content: space-between; }
 .task-due { display: flex; align-items: center; gap: 3px; font-size: 0.72rem; color: var(--text-muted); }
 .task-due.overdue { color: var(--color-danger); }
+.task-assignees { display: flex; align-items: center; }
 .task-assignee {
   width: 22px; height: 22px; border-radius: 50%;
   background: linear-gradient(135deg, var(--color-project), #8B5CF6);
   color: white; font-size: 0.65rem; font-weight: 700;
   display: flex; align-items: center; justify-content: center;
+  border: 1.5px solid var(--bg-card); position: relative;
+}
+
+/* 멀티 담당자 선택 칩 */
+.assignee-multi {
+  display: flex; flex-wrap: wrap; gap: 6px;
+}
+.assignee-chip {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 10px; border-radius: 99px;
+  border: 1.5px solid var(--border-color);
+  background: var(--bg-hover); cursor: pointer;
+  font-size: 0.8rem; color: var(--text-secondary);
+  transition: all var(--transition-fast);
+  user-select: none;
+}
+.assignee-chip:hover { border-color: var(--color-project); color: var(--color-project); }
+.assignee-chip.selected {
+  background: rgba(48,127,226,0.1);
+  border-color: var(--color-project);
+  color: var(--color-project);
+  font-weight: 600;
+}
+.chip-avatar {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-project), #8B5CF6);
+  color: white; font-size: 0.65rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
 }
 
 .btn-add-inline {

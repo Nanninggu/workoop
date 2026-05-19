@@ -26,8 +26,11 @@ public class Task {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    private String assigneeIds;   // JSON 배열 "[1,3,7]" — 다수 담당자
+
     // JOIN fields
-    private String assigneeName;
+    private String assigneeName;  // 첫 번째 담당자 이름 (하위 호환)
+    private String assigneeNames; // 쉼표 구분 전체 담당자 이름
     private String kpiName;
     private String kpiUnit;
     private String kpiType;

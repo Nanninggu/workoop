@@ -79,9 +79,14 @@
                   </span>
                 </div>
               </div>
-              <button class="btn-complete-task" @click="completeCurrentTask">
-                <Check :size="16" /> 완료
-              </button>
+              <div class="task-actions">
+                <button v-if="focus.myTasks.length > 1" class="btn-skip-task" @click="skipTask">
+                  <SkipForward :size="14" /> 건너뛰기
+                </button>
+                <button class="btn-complete-task" @click="completeCurrentTask">
+                  <Check :size="16" /> 완료
+                </button>
+              </div>
             </div>
 
             <!-- 진행률 링 -->
@@ -126,17 +131,21 @@
               담당 태스크가 없습니다.<br>
               칸반 보드에서 본인에게 태스크를 할당해 주세요.
             </div>
+
+            <!-- 키보드 단축키 안내 -->
+            <div class="focus-shortcuts">
+              <span><kbd>Space</kbd> 시작/정지</span>
+              <span><kbd>Enter</kbd> 완료</span>
+              <span v-if="focus.myTasks.length > 1"><kbd>→</kbd> 건너뛰기</span>
+              <span><kbd>Esc</kbd> 종료</span>
+            </div>
           </div>
         </div>
 
         <!-- 완료 confetti 애니메이션 -->
         <div v-if="showConfetti" class="confetti-wrap">
-          <div v-for="i in 30" :key="i" class="confetti-piece"
-            :style="{
-              left: Math.random() * 100 + '%',
-              animationDelay: Math.random() * 0.5 + 's',
-              background: confettiColors[i % confettiColors.length]
-            }"
+          <div v-for="(piece, i) in confettiPieces" :key="i" class="confetti-piece"
+            :style="{ left: piece.left, animationDelay: piece.delay, background: piece.color }"
           ></div>
         </div>
 
@@ -151,14 +160,25 @@ import { useFocusStore } from '@/store/focusStore'
 import { useKpiStore } from '@/store/kpiStore'
 import { taskApi } from '@/api/projectApi'
 import { ElMessage } from 'element-plus'
-import { Play, Pause, RotateCcw, X, Target, Calendar, Clock, Check } from 'lucide-vue-next'
+import { Play, Pause, RotateCcw, X, Target, Calendar, Clock, Check, SkipForward } from 'lucide-vue-next'
 import dayjs from 'dayjs'
 
 const focus   = useFocusStore()
 const kpiStore = useKpiStore()
 
-const showConfetti = ref(false)
+const showConfetti   = ref(false)
 const confettiColors = ['#3B82F6','#10B981','#F59E0B','#EF4444','#8B5CF6','#F97316']
+const confettiPieces = ref([])
+
+function triggerConfetti() {
+  confettiPieces.value = Array.from({ length: 30 }, (_, i) => ({
+    left:  Math.random() * 100 + '%',
+    delay: Math.random() * 0.5 + 's',
+    color: confettiColors[i % confettiColors.length],
+  }))
+  showConfetti.value = true
+  setTimeout(() => { showConfetti.value = false }, 2000)
+}
 
 // 현재 태스크에 연결된 KPI
 const linkedKpi = computed(() => {
@@ -188,13 +208,33 @@ function formatDate(d) {
   return d ? dayjs(d).format('MM/DD') : ''
 }
 
+function skipTask() {
+  if (!focus.myTasks.length) return
+  const idx = focus.myTasks.findIndex(t => t.id === focus.currentTask?.id)
+  const next = focus.myTasks[(idx + 1) % focus.myTasks.length]
+  if (next) focus.selectTask(next)
+}
+
+function onKeyDown(e) {
+  if (!focus.active) return
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
+  if (e.code === 'Space') {
+    e.preventDefault()
+    focus.running ? focus.pauseTimer() : focus.startTimer()
+  } else if (e.code === 'Escape') {
+    exitFocus()
+  } else if (e.code === 'ArrowRight' || e.key === 'n') {
+    skipTask()
+  } else if (e.code === 'Enter') {
+    if (focus.currentTask) completeCurrentTask()
+  }
+}
+
 async function completeCurrentTask() {
   if (!focus.currentTask) return
   await taskApi.changeStatus(focus.currentTask.id, 'DONE')
 
-  // confetti 트리거
-  showConfetti.value = true
-  setTimeout(() => { showConfetti.value = false }, 2000)
+  triggerConfetti()
 
   const taskTitle = focus.currentTask.title
   if (focus.currentTask.kpiId && focus.currentTask.kpiContribution) {
@@ -215,6 +255,9 @@ function exitFocus() {
   focus.exit()
   alerts.forEach(msg => ElMessage.info(msg))
 }
+
+onMounted(()  => window.addEventListener('keydown', onKeyDown))
+onUnmounted(() => window.removeEventListener('keydown', onKeyDown))
 
 // 집중 모드 진입 시 KPI 데이터 로드
 watch(() => focus.active, (val) => {
@@ -311,13 +354,31 @@ watch(() => focus.timeLabel, (t) => {
 .fct-desc { font-size: 0.825rem; color: rgba(255,255,255,0.4); margin-bottom: 10px; line-height: 1.5; }
 .fct-meta { display: flex; gap: 12px; }
 .fct-due, .fct-hours { display: flex; align-items: center; gap: 4px; font-size: 0.75rem; color: rgba(255,255,255,0.3); }
+.task-actions { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; flex-shrink: 0; }
+.btn-skip-task {
+  display: flex; align-items: center; gap: 5px;
+  padding: 6px 12px; background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-md);
+  color: rgba(255,255,255,0.45); font-size: 0.775rem; font-weight: 600; cursor: pointer;
+  transition: all var(--transition-fast); white-space: nowrap;
+}
+.btn-skip-task:hover { background: rgba(255,255,255,0.14); color: white; }
 .btn-complete-task {
-  display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+  display: flex; align-items: center; gap: 6px; white-space: nowrap;
   padding: 8px 16px; background: var(--color-success); color: white;
   border: none; border-radius: var(--radius-md); font-size: 0.825rem; font-weight: 700;
   cursor: pointer; transition: opacity var(--transition-fast);
 }
 .btn-complete-task:hover { opacity: 0.88; }
+.focus-shortcuts {
+  display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
+  font-size: 0.7rem; color: rgba(255,255,255,0.2);
+}
+.focus-shortcuts kbd {
+  background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 4px; padding: 1px 6px; font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem; color: rgba(255,255,255,0.35); margin-right: 3px;
+}
 
 /* 타이머 링 */
 .focus-ring-wrap { position: relative; width: 200px; height: 200px; }

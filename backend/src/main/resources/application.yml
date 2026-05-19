@@ -2,20 +2,8 @@ spring:
   main:
     banner-mode: off
     lazy-initialization: true
-  datasource:
-    url: jdbc:h2:file:${user.home}/Documents/Coop-Application/data/ptkt-db;AUTO_SERVER=TRUE;MODE=MySQL
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
-      settings:
-        web-allow-others: false
   sql:
     init:
-      mode: always
       schema-locations: classpath:schema.sql
       data-locations: classpath:data.sql
       continue-on-error: true
@@ -44,12 +32,6 @@ mybatis:
   type-aliases-package: com.ptkt.model
   configuration:
     map-underscore-to-camel-case: true
-    # log-impl 제거: SQL 전체를 stdout에 출력하면 I/O 블로킹으로 기동이 크게 느려짐
 
 server:
   port: 48080
-
-logging:
-  level:
-    com.ptkt: INFO
-    org.mybatis: WARN

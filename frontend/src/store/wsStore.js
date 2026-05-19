@@ -2,7 +2,8 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { Client } from '@stomp/stompjs'
 
-const WS_URL = 'ws://localhost:48080/ws'
+// 현재 호스트 기준 — Vite dev(51300)에서는 프록시로, 48080 정적 서빙/EC2에서는 같은 origin으로 동작
+const WS_URL = `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}/ws`
 
 export const useWsStore = defineStore('ws', () => {
   const connected   = ref(false)
@@ -41,23 +42,18 @@ export const useWsStore = defineStore('ws', () => {
       onConnect: () => {
         connected.value = true
 
-        // 조직 범위 태스크 이벤트
         client.subscribe(`/topic/org/${orgId}/tasks`, msg => {
           _emit(JSON.parse(msg.body).type, JSON.parse(msg.body))
         })
-        // 조직 범위 스크럼 이벤트
         client.subscribe(`/topic/org/${orgId}/scrums`, msg => {
           _emit(JSON.parse(msg.body).type, JSON.parse(msg.body))
         })
-        // 조직 범위 프로젝트 이벤트
         client.subscribe(`/topic/org/${orgId}/projects`, msg => {
           _emit(JSON.parse(msg.body).type, JSON.parse(msg.body))
         })
-        // 조직 채팅
         client.subscribe(`/topic/org/${orgId}/chat`, msg => {
           _emit(JSON.parse(msg.body).type, JSON.parse(msg.body))
         })
-        // 개인 알림 (서버에서 /user/{id}/queue/notifications 로 전송)
         client.subscribe(`/user/queue/notifications`, msg => {
           _emit('NOTIFICATION', JSON.parse(msg.body))
         })
@@ -66,10 +62,11 @@ export const useWsStore = defineStore('ws', () => {
         connected.value = false
       },
       onStompError: frame => {
-        console.warn('[WS] STOMP error', frame.headers?.message)
+        console.error('[WS] STOMP error', frame.headers?.message)
       },
-      onWebSocketError: () => {
+      onWebSocketError: (e) => {
         connected.value = false
+        console.error('[WS] WebSocket 오류', e)
       },
     })
 

@@ -17,7 +17,9 @@
         <result property="dueDate"         column="due_date"/>
         <result property="estimatedHours"  column="estimated_hours"/>
         <result property="sortOrder"       column="sort_order"/>
+        <result property="assigneeIds"     column="assignee_ids"/>
         <result property="assigneeName"    column="assignee_name"/>
+        <result property="assigneeNames"   column="assignee_names"/>
         <result property="kpiName"         column="kpi_name"/>
         <result property="kpiUnit"         column="kpi_unit"/>
         <result property="kpiType"         column="kpi_type"/>
@@ -34,10 +36,10 @@
     </sql>
 
     <insert id="insert" parameterType="com.ptkt.model.Task" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO task (project_id, title, description, assignee_id, status, priority,
+        INSERT INTO task (project_id, title, description, assignee_id, assignee_ids, status, priority,
                           kpi_id, kpi_contribution, due_date, estimated_hours, sort_order,
                           created_at, updated_at)
-        VALUES (#{projectId}, #{title}, #{description}, #{assigneeId}, #{status}, #{priority},
+        VALUES (#{projectId}, #{title}, #{description}, #{assigneeId}, #{assigneeIds}, #{status}, #{priority},
                 #{kpiId}, #{kpiContribution}, #{dueDate}, #{estimatedHours}, #{sortOrder},
                 CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
     </insert>
@@ -75,7 +77,16 @@
         FROM task t
         LEFT JOIN users u ON t.assignee_id = u.id
         LEFT JOIN kpi k   ON t.kpi_id = k.id
-        WHERE t.assignee_id = #{assigneeId} AND t.status != 'DONE'
+        WHERE t.status != 'DONE'
+          AND (
+            t.assignee_id = #{assigneeId}
+            OR (t.assignee_ids IS NOT NULL AND (
+                  t.assignee_ids LIKE CONCAT('[', #{assigneeId}, ']')
+               OR t.assignee_ids LIKE CONCAT('[', #{assigneeId}, ',%')
+               OR t.assignee_ids LIKE CONCAT('%,', #{assigneeId}, ']')
+               OR t.assignee_ids LIKE CONCAT('%,', #{assigneeId}, ',%')
+            ))
+          )
         ORDER BY
           CASE t.priority WHEN 'P1' THEN 1 WHEN 'P2' THEN 2 ELSE 3 END,
           t.due_date ASC NULLS LAST,
@@ -130,6 +141,7 @@
             title            = #{title},
             description      = #{description},
             assignee_id      = #{assigneeId},
+            assignee_ids     = #{assigneeIds},
             status           = #{status},
             priority         = #{priority},
             kpi_id           = #{kpiId},

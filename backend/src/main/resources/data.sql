@@ -14,6 +14,20 @@ INSERT INTO users (id, email, password, name, created_at)
 SELECT 2, 'test@coopwork.io', '$2a$10$ddxngHqFTa2oY.PArDsjSOxcAYoJB2mTThSTJ7jWNAQ/GA6W6hCui', '테스트유저', CURRENT_TIMESTAMP
 WHERE NOT EXISTS (SELECT 1 FROM users WHERE id = 2);
 
+-- ── 샘플 조직 ──
+INSERT INTO organization (id, name, slug, created_at)
+SELECT 1, 'CoopWork 데모팀', 'coopwork-demo', CURRENT_TIMESTAMP
+WHERE NOT EXISTS (SELECT 1 FROM organization WHERE id = 1);
+
+-- admin → OWNER, test → MEMBER
+INSERT INTO membership (org_id, user_id, role, joined_at)
+SELECT 1, 1, 'OWNER', CURRENT_TIMESTAMP
+WHERE NOT EXISTS (SELECT 1 FROM membership WHERE org_id = 1 AND user_id = 1);
+
+INSERT INTO membership (org_id, user_id, role, joined_at)
+SELECT 1, 2, 'MEMBER', CURRENT_TIMESTAMP
+WHERE NOT EXISTS (SELECT 1 FROM membership WHERE org_id = 1 AND user_id = 2);
+
 -- 글로벌 카테고리 (owner_id NULL → 모든 사용자에게 노출)
 INSERT INTO category (id, name, color, icon, description, sort_order)
 SELECT 1, '매출/영업', '#10B981', 'TrendingUp', '매출 목표, 신규 계약, 고객 관리 KPI', 1

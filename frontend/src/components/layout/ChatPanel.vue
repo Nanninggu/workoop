@@ -119,6 +119,7 @@
 <script setup>
 import { ref, watch, nextTick, computed  } from 'vue'
 import { MessageSquare, X, Send, Loader2, Bot } from 'lucide-vue-next'
+import { ElMessage } from 'element-plus'
 import { useChatStore } from '@/store/chatStore'
 import { useAuthStore } from '@/store/authStore'
 import { useOrgStore } from '@/store/orgStore'
@@ -200,7 +201,11 @@ function handleEnter(e) {
 async function submit() {
   if (isSubmitting.value) return
   const content = draft.value.trim()
-  if (!content || !orgStore.currentOrg) return
+  if (!content) return
+  if (!orgStore.currentOrg) {
+    ElMessage.warning('조직에 가입 후 채팅할 수 있습니다. 온보딩을 완료해 주세요.')
+    return
+  }
 
   isSubmitting.value = true
   draft.value = ''
@@ -212,6 +217,8 @@ async function submit() {
     } else {
       await store.sendMessage(orgStore.currentOrg.id, content)
     }
+  } catch (err) {
+    console.error('[Chat] submit 오류', err)
   } finally {
     isSubmitting.value = false
   }
@@ -234,7 +241,6 @@ async function askAi(question) {
       orgStore.currentOrg.name,
       question
     )
-    console.log('[AI Chat] 응답:', res)
     const answer = res?.data?.answer ?? res?.answer ?? '응답을 받지 못했습니다.'
     aiMessages.value.push({
       isAi: true,
@@ -242,7 +248,7 @@ async function askAi(question) {
       createdAt: new Date().toISOString(),
     })
   } catch(e) {
-    console.error('[AI Chat] 오류:', e)
+    console.error('[Chat] AI 응답 오류', e)
     aiMessages.value.push({
       isAi: true,
       content: '⚠️ AI 응답을 가져오는 데 실패했습니다: ' + (e.message || '알 수 없는 오류'),

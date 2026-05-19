@@ -193,6 +193,25 @@
         </div>
       </div>
 
+      <!-- ⑦ 활동 히트맵 (최근 1년) -->
+      <div class="analytics-card" v-if="heatmapOption">
+        <div class="ac-title"><Activity :size="15" /> 활동 히트맵 (최근 1년)</div>
+        <v-chart :option="heatmapOption" style="height:200px;width:100%" autoresize />
+      </div>
+
+      <!-- ⑧ + ⑨ 도넛 + 요일별 -->
+      <div class="two-col">
+        <div class="analytics-card" v-if="statusDonutOption">
+          <div class="ac-title"><PieChartIcon :size="15" /> KPI 상태 분포</div>
+          <v-chart :option="statusDonutOption" style="height:240px;width:100%" autoresize />
+        </div>
+
+        <div class="analytics-card" v-if="weekdayBarOption">
+          <div class="ac-title"><CalendarDays :size="15" /> 요일별 기록 분포</div>
+          <v-chart :option="weekdayBarOption" style="height:240px;width:100%" autoresize />
+        </div>
+      </div>
+
     </template>
   </div>
 </template>
@@ -203,17 +222,18 @@ import { useKpiStore } from '@/store/kpiStore'
 import { recordApi } from '@/api/kpiApi'
 import dayjs from 'dayjs'
 import { use } from 'echarts/core'
-import { LineChart, BarChart } from 'echarts/charts'
-import { GridComponent, TooltipComponent } from 'echarts/components'
+import { LineChart, BarChart, PieChart, HeatmapChart } from 'echarts/charts'
+import { GridComponent, TooltipComponent, CalendarComponent, VisualMapComponent, LegendComponent } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
 import VChart from 'vue-echarts'
-import { Trophy, AlertTriangle, BarChart3, TrendingUp, LineChart as LineChartIcon, CalendarDays, Target } from 'lucide-vue-next'
+import { Trophy, AlertTriangle, BarChart3, TrendingUp, LineChart as LineChartIcon, CalendarDays, Target, PieChart as PieChartIcon, Activity } from 'lucide-vue-next'
 
-use([LineChart, BarChart, GridComponent, TooltipComponent, CanvasRenderer])
+use([LineChart, BarChart, PieChart, HeatmapChart, GridComponent, TooltipComponent, CalendarComponent, VisualMapComponent, LegendComponent, CanvasRenderer])
 
 const store = useKpiStore()
 const loading = ref(false)
 const records = ref([])
+const yearRecords = ref([])
 
 const selectedPeriod = ref(30)
 const periodOptions = [
@@ -236,6 +256,11 @@ async function loadData() {
     await store.fetchDashboard()
     const res = await recordApi.getByDateRange(rangeStart.value, rangeEnd.value)
     records.value = res.data || []
+
+    const yearStart = dayjs().subtract(364, 'day').format('YYYY-MM-DD')
+    const yearEnd   = dayjs().format('YYYY-MM-DD')
+    const yres = await recordApi.getByDateRange(yearStart, yearEnd)
+    yearRecords.value = yres.data || []
   } finally {
     loading.value = false
   }
@@ -390,6 +415,121 @@ const mostActiveDay = computed(() => {
 const perfectKpis   = computed(() => kpiRates.value.filter(k => k.rate >= 100).length)
 const lowKpis       = computed(() => kpiRates.value.filter(k => k.rate < 50).length)
 const noRecordKpis  = computed(() => kpiRates.value.filter(k => k.rate === 0).length)
+
+// ⑦ 활동 히트맵 (최근 1년) — GitHub 잔디 스타일
+const heatmapOption = computed(() => {
+  if (yearRecords.value.length === 0) return null
+  const counts = {}
+  yearRecords.value.forEach(r => {
+    counts[r.recordedDate] = (counts[r.recordedDate] || 0) + 1
+  })
+  const data = Object.entries(counts).map(([d, c]) => [d, c])
+  const maxCount = Math.max(1, ...Object.values(counts))
+  const yearStart = dayjs().subtract(364, 'day').format('YYYY-MM-DD')
+  const yearEnd   = dayjs().format('YYYY-MM-DD')
+  return {
+    tooltip: {
+      formatter: p => `${p.value[0]}<br/>기록: ${p.value[1]}건`
+    },
+    visualMap: {
+      min: 0, max: maxCount,
+      show: true, orient: 'horizontal', left: 'center', bottom: 0,
+      itemWidth: 10, itemHeight: 100,
+      textStyle: { fontSize: 10, color: '#94A3B8' },
+      inRange: { color: ['#F1F5F9', '#BBF7D0', '#86EFAC', '#22C55E', '#15803D'] }
+    },
+    calendar: {
+      top: 20, left: 36, right: 16, bottom: 36,
+      range: [yearStart, yearEnd],
+      cellSize: ['auto', 14],
+      itemStyle: { borderColor: '#fff', borderWidth: 2 },
+      splitLine: { show: false },
+      dayLabel: { fontSize: 10, color: '#94A3B8' },
+      monthLabel: { fontSize: 10, color: '#94A3B8' },
+      yearLabel: { show: false }
+    },
+    series: [{
+      type: 'heatmap', coordinateSystem: 'calendar', data
+    }]
+  }
+})
+
+// ⑧ KPI 상태 분포 도넛
+const statusDonutOption = computed(() => {
+  const rates = kpiRates.value
+  if (rates.length === 0) return null
+  const buckets = [
+    { name: '🔥 100% 달성', min: 100, max: Infinity, color: '#10B981' },
+    { name: '✅ 70%+ 우수',  min: 70,  max: 100,     color: '#3B82F6' },
+    { name: '🟡 40%+ 보통',  min: 40,  max: 70,      color: '#F59E0B' },
+    { name: '🔴 40% 미만',   min: 0.01, max: 40,     color: '#EF4444' },
+    { name: '⚪ 미기록',     min: -1,   max: 0.01,   color: '#CBD5E1' }
+  ]
+  const data = buckets.map(b => ({
+    name: b.name,
+    value: rates.filter(r => r.rate >= b.min && r.rate < b.max).length,
+    itemStyle: { color: b.color }
+  })).filter(d => d.value > 0)
+
+  return {
+    tooltip: { trigger: 'item', formatter: '{b}: {c}개 ({d}%)' },
+    legend: {
+      orient: 'vertical', left: 0, top: 'middle',
+      textStyle: { fontSize: 11, color: '#64748B' },
+      itemWidth: 12, itemHeight: 12
+    },
+    series: [{
+      type: 'pie',
+      radius: ['48%', '72%'],
+      center: ['65%', '50%'],
+      avoidLabelOverlap: true,
+      label: { show: false },
+      labelLine: { show: false },
+      data
+    }]
+  }
+})
+
+// ⑨ 요일별 기록 분포
+const weekdayBarOption = computed(() => {
+  if (records.value.length === 0) return null
+  const days = ['일', '월', '화', '수', '목', '금', '토']
+  const counts = [0, 0, 0, 0, 0, 0, 0]
+  records.value.forEach(r => {
+    const d = dayjs(r.recordedDate).day()
+    counts[d]++
+  })
+  // 월~일 순서로 재정렬
+  const reorder = [1, 2, 3, 4, 5, 6, 0]
+  const labels  = reorder.map(i => days[i])
+  const values  = reorder.map(i => counts[i])
+  const maxV = Math.max(...values)
+
+  return {
+    tooltip: { trigger: 'axis', formatter: p => `${p[0].name}요일<br/>${p[0].value}건` },
+    grid: { left: 36, right: 16, top: 16, bottom: 28 },
+    xAxis: {
+      type: 'category',
+      data: labels,
+      axisLabel: { fontSize: 11, color: '#64748B' },
+      axisLine: { lineStyle: { color: '#E2E8F0' } }
+    },
+    yAxis: {
+      type: 'value',
+      axisLabel: { fontSize: 10, color: '#94A3B8' },
+      splitLine: { lineStyle: { color: '#F1F5F9' } }
+    },
+    series: [{
+      type: 'bar',
+      data: values.map(v => ({
+        value: v,
+        itemStyle: { color: v === maxV && v > 0 ? '#3B82F6' : '#93C5FD' }
+      })),
+      barWidth: '52%',
+      itemStyle: { borderRadius: [6, 6, 0, 0] }
+    }]
+  }
+})
 
 onMounted(loadData)
 </script>

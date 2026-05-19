@@ -32,8 +32,16 @@ public class KpiRecordService {
         return kpiRecordMapper.findByDateRange(start, end);
     }
 
+    public List<KpiRecord> findByOwnerIdAndDateRange(Long ownerId, LocalDate start, LocalDate end) {
+        return kpiRecordMapper.findByOwnerIdAndDateRange(ownerId, start, end);
+    }
+
     public List<KpiRecord> findByDate(LocalDate date) {
         return kpiRecordMapper.findByDate(date);
+    }
+
+    public List<KpiRecord> findByOwnerIdAndDate(Long ownerId, LocalDate date) {
+        return kpiRecordMapper.findByOwnerIdAndDate(ownerId, date);
     }
 
     public Optional<KpiRecord> findByKpiIdAndDate(Long kpiId, LocalDate date) {

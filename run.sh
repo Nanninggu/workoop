@@ -92,7 +92,7 @@ fi
 
 # ── 서버 실행 ──
 echo -e "${CYAN}▶ 서버 시작 중...${NC}"
-java -jar "$JAR" > "$LOG_FILE" 2>&1 &
+java -Dspring.profiles.active=local -jar "$JAR" > "$LOG_FILE" 2>&1 &
 SERVER_PID=$!
 echo $SERVER_PID > "$PID_FILE"
 
