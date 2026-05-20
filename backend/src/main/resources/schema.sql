@@ -211,3 +211,16 @@ CREATE TABLE IF NOT EXISTS review (
     saved_at         TIMESTAMP     DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS idx_review_user ON review(user_id, saved_at);
+
+-- 일정 (Slack 감지 + 수동 등록)
+CREATE TABLE IF NOT EXISTS schedule (
+    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id     BIGINT NOT NULL,
+    org_id      BIGINT,
+    title       VARCHAR(300) NOT NULL,
+    event_date  DATE NOT NULL,
+    event_time  VARCHAR(10),
+    source      VARCHAR(20) DEFAULT 'MANUAL',
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_schedule_user_date ON schedule(user_id, event_date);

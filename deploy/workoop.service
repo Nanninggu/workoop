@@ -13,8 +13,9 @@ EnvironmentFile=/etc/workoop.env
 WorkingDirectory=/home/ubuntu/workoop
 
 ExecStart=/usr/bin/java \
-  -Xms256m -Xmx512m \
+  -Xms512m -Xmx1536m \
   -Dspring.profiles.active=prod \
+  -Djena.tdb2.location=/home/ubuntu/workoop/data/jena-tdb \
   -jar /home/ubuntu/workoop/backend/target/ptkt-backend-1.0.0.jar
 
 # 비정상 종료 시 자동 재시작 (5초 대기)

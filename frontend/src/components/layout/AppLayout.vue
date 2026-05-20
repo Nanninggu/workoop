@@ -287,7 +287,7 @@ import 'dayjs/locale/ko'
 import {
   LayoutDashboard, BarChart3, ListChecks, Tag, ChevronLeft, ChevronRight, Settings,
   LineChart, CalendarDays, BookOpen, Moon, Sun, Search, ClipboardList, StickyNote, Star,
-  Building2, Kanban, Headphones, Bell, BarChart2, MessageSquare
+  Building2, Kanban, Headphones, Bell, BarChart2, MessageSquare, Share2
 } from 'lucide-vue-next'
 import { useKpiStore } from '@/store/kpiStore'
 import { useAuthStore } from '@/store/authStore'
@@ -418,6 +418,12 @@ const navGroups = [
       { path: '/star',     label: 'STAR 노트', icon: Star },
       { path: '/calendar', label: '캘린더',    icon: CalendarDays },
       { path: '/review',   label: '회고',       icon: BookOpen },
+    ]
+  },
+  {
+    label: '인사이트',
+    items: [
+      { path: '/ontology',   label: '지식 그래프', icon: Share2 },
     ]
   },
   {

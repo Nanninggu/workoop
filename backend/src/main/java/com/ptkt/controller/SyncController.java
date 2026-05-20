@@ -27,10 +27,10 @@ public class SyncController {
 
         SyncService.SyncResult result = syncService.syncSlack(user.getId(), orgId);
 
-        Map<String, Object> data = Map.of(
-                "success", result.success(),
-                "message", result.message()
-        );
+        Map<String, Object> data = new java.util.HashMap<>();
+        data.put("success", result.success());
+        data.put("message", result.message());
+        data.put("events",  result.events());
 
         return ResponseEntity.ok(ApiResponse.ok(result.message(), data));
     }

@@ -23,6 +23,7 @@ const routes = [
       { path: 'calendar',   name: 'Calendar',   component: () => import('@/views/CalendarView.vue'),   meta: { title: '캘린더' } },
       { path: 'review',     name: 'Review',     component: () => import('@/views/ReviewView.vue'),     meta: { title: '회고' } },
       { path: 'star',       name: 'Star',       component: () => import('@/views/StarView.vue'),       meta: { title: 'STAR 노트' } },
+      { path: 'ontology',   name: 'Ontology',   component: () => import('@/views/OntologyView.vue'),   meta: { title: '지식 그래프' } },
       { path: 'settings',   name: 'Settings',   component: () => import('@/views/SettingsView.vue'),   meta: { title: '설정' } },
     ]
   }

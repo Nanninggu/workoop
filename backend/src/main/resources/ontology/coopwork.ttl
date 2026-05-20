@@ -1,0 +1,181 @@
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix cw:   <http://coopwork.io/ontology#> .
+
+# ── 온톨로지 선언 ──────────────────────────────────────────
+<http://coopwork.io/ontology>
+    a owl:Ontology ;
+    rdfs:label "CoopWork Knowledge Ontology"@ko ;
+    rdfs:comment "팀 협업 및 KPI 관리 플랫폼의 지식 온톨로지"@ko .
+
+# ── 클래스 ────────────────────────────────────────────────
+cw:User a owl:Class ;
+    rdfs:label "사용자"@ko ;
+    rdfs:comment "CoopWork 플랫폼 사용자" .
+
+cw:Organization a owl:Class ;
+    rdfs:label "조직"@ko ;
+    rdfs:comment "팀 또는 회사 단위 조직" .
+
+cw:Project a owl:Class ;
+    rdfs:label "프로젝트"@ko ;
+    rdfs:comment "조직 내 프로젝트" .
+
+cw:Task a owl:Class ;
+    rdfs:label "태스크"@ko ;
+    rdfs:comment "프로젝트 내 업무 단위" .
+
+cw:KPI a owl:Class ;
+    rdfs:label "KPI"@ko ;
+    rdfs:comment "핵심 성과 지표" .
+
+cw:ScrumRecord a owl:Class ;
+    rdfs:label "스크럼 기록"@ko ;
+    rdfs:comment "데일리 스크럼 체크인 기록" .
+
+cw:StarNote a owl:Class ;
+    rdfs:label "STAR 노트"@ko ;
+    rdfs:comment "상황-과제-행동-결과 형식의 경험 기록" .
+
+cw:Schedule a owl:Class ;
+    rdfs:label "일정"@ko ;
+    rdfs:comment "캘린더 등록 일정" .
+
+# ── Object Properties (관계) ───────────────────────────────
+cw:memberOf a owl:ObjectProperty ;
+    rdfs:label "소속"@ko ;
+    rdfs:domain cw:User ;
+    rdfs:range  cw:Organization .
+
+cw:ownsProject a owl:ObjectProperty ;
+    rdfs:label "프로젝트 보유"@ko ;
+    rdfs:domain cw:Organization ;
+    rdfs:range  cw:Project .
+
+cw:assignedTo a owl:ObjectProperty ;
+    rdfs:label "담당자"@ko ;
+    rdfs:domain cw:Task ;
+    rdfs:range  cw:User .
+
+cw:belongsToProject a owl:ObjectProperty ;
+    rdfs:label "프로젝트 소속"@ko ;
+    rdfs:domain cw:Task ;
+    rdfs:range  cw:Project .
+
+cw:linkedKPI a owl:ObjectProperty ;
+    rdfs:label "연결 KPI"@ko ;
+    rdfs:domain cw:Task ;
+    rdfs:range  cw:KPI .
+
+cw:blockedBy a owl:ObjectProperty ;
+    rdfs:label "블로킹 관계"@ko ;
+    rdfs:domain cw:Task ;
+    rdfs:range  cw:Task .
+
+cw:ownsKPI a owl:ObjectProperty ;
+    rdfs:label "KPI 소유"@ko ;
+    rdfs:domain cw:User ;
+    rdfs:range  cw:KPI .
+
+cw:hasScrum a owl:ObjectProperty ;
+    rdfs:label "스크럼 기록 보유"@ko ;
+    rdfs:domain cw:User ;
+    rdfs:range  cw:ScrumRecord .
+
+cw:hasStarNote a owl:ObjectProperty ;
+    rdfs:label "STAR 노트 보유"@ko ;
+    rdfs:domain cw:User ;
+    rdfs:range  cw:StarNote .
+
+cw:hasSchedule a owl:ObjectProperty ;
+    rdfs:label "일정 보유"@ko ;
+    rdfs:domain cw:User ;
+    rdfs:range  cw:Schedule .
+
+# ── Datatype Properties (속성) ────────────────────────────
+cw:hasId a owl:DatatypeProperty ;
+    rdfs:label "식별자"@ko ;
+    rdfs:range xsd:long .
+
+cw:hasName a owl:DatatypeProperty ;
+    rdfs:label "이름"@ko ;
+    rdfs:range xsd:string .
+
+cw:hasEmail a owl:DatatypeProperty ;
+    rdfs:label "이메일"@ko ;
+    rdfs:domain cw:User ;
+    rdfs:range xsd:string .
+
+cw:hasRole a owl:DatatypeProperty ;
+    rdfs:label "역할"@ko ;
+    rdfs:domain cw:User ;
+    rdfs:range xsd:string .
+
+cw:hasTitle a owl:DatatypeProperty ;
+    rdfs:label "제목"@ko ;
+    rdfs:range xsd:string .
+
+cw:hasStatus a owl:DatatypeProperty ;
+    rdfs:label "상태"@ko ;
+    rdfs:range xsd:string .
+
+cw:hasPriority a owl:DatatypeProperty ;
+    rdfs:label "우선순위"@ko ;
+    rdfs:domain cw:Task ;
+    rdfs:range xsd:string .
+
+cw:hasDueDate a owl:DatatypeProperty ;
+    rdfs:label "마감일"@ko ;
+    rdfs:domain cw:Task ;
+    rdfs:range xsd:date .
+
+cw:hasKpiType a owl:DatatypeProperty ;
+    rdfs:label "KPI 유형"@ko ;
+    rdfs:domain cw:KPI ;
+    rdfs:range xsd:string .
+
+cw:hasTargetValue a owl:DatatypeProperty ;
+    rdfs:label "목표값"@ko ;
+    rdfs:domain cw:KPI ;
+    rdfs:range xsd:decimal .
+
+cw:hasUnit a owl:DatatypeProperty ;
+    rdfs:label "단위"@ko ;
+    rdfs:domain cw:KPI ;
+    rdfs:range xsd:string .
+
+cw:hasScrumDate a owl:DatatypeProperty ;
+    rdfs:label "스크럼 날짜"@ko ;
+    rdfs:domain cw:ScrumRecord ;
+    rdfs:range xsd:date .
+
+cw:hasBlockerText a owl:DatatypeProperty ;
+    rdfs:label "블로커 내용"@ko ;
+    rdfs:domain cw:ScrumRecord ;
+    rdfs:range xsd:string .
+
+cw:hasEnergy a owl:DatatypeProperty ;
+    rdfs:label "에너지 지수"@ko ;
+    rdfs:domain cw:ScrumRecord ;
+    rdfs:range xsd:integer .
+
+cw:hasFocus a owl:DatatypeProperty ;
+    rdfs:label "집중 목표"@ko ;
+    rdfs:domain cw:ScrumRecord ;
+    rdfs:range xsd:string .
+
+cw:hasEventDate a owl:DatatypeProperty ;
+    rdfs:label "일정 날짜"@ko ;
+    rdfs:domain cw:Schedule ;
+    rdfs:range xsd:date .
+
+cw:hasEventTime a owl:DatatypeProperty ;
+    rdfs:label "일정 시간"@ko ;
+    rdfs:domain cw:Schedule ;
+    rdfs:range xsd:string .
+
+cw:hasDescription a owl:DatatypeProperty ;
+    rdfs:label "설명"@ko ;
+    rdfs:range xsd:string .

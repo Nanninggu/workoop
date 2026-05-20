@@ -38,9 +38,13 @@
       <button v-if="!isViewingToday" class="date-today-btn" @click="goToToday" title="오늘로 이동">
         오늘로
       </button>
-      <button class="sync-btn" @click="syncSlack" :disabled="syncing" title="Slack 메시지 자동 입력">
-        <RefreshCw :size="14" :class="{ spinning: syncing }" />
-        <span class="sync-btn-label">{{ syncing ? '동기화 중...' : 'Slack 동기화' }}</span>
+      <button class="sync-btn" @click="syncSlack" :disabled="syncing" title="Slack 동기화">
+        <svg v-if="!syncing" class="slack-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+          <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/>
+        </svg>
+        <svg v-else class="slack-icon spinning" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+          <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/>
+        </svg>
       </button>
       <button class="export-btn" @click="showExportModal = true" title="CSV 내보내기">
         <Download :size="14" />
@@ -684,6 +688,49 @@
       </div>
     </Transition>
 
+    <!-- ── Slack 동기화 토스트 ── -->
+    <Transition name="toast">
+      <div v-if="syncToast" :class="['sync-toast', syncToastType]">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="13" height="13" fill="currentColor">
+          <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/>
+        </svg>
+        {{ syncToast }}
+      </div>
+    </Transition>
+
+    <!-- ── 일정 등록 확인 모달 ── -->
+    <Transition name="modal-fade">
+      <div v-if="pendingEvents.length" class="modal-overlay" @click.self="pendingEvents = []">
+        <div class="event-confirm-modal">
+          <div class="ecm-header">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="#E01E5A">
+              <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/>
+            </svg>
+            <span>Slack에서 일정이 감지됐어요</span>
+          </div>
+          <p class="ecm-sub">캘린더에 등록할 일정을 선택하세요.</p>
+          <div class="ecm-list">
+            <label v-for="(ev, i) in pendingEvents" :key="i" class="ecm-item">
+              <input type="checkbox" v-model="ev.checked" class="ecm-checkbox" />
+              <div class="ecm-info">
+                <span class="ecm-title">{{ ev.title }}</span>
+                <span class="ecm-date">
+                  {{ ev.eventDate }}
+                  <span v-if="ev.eventTime"> {{ ev.eventTime }}</span>
+                </span>
+              </div>
+            </label>
+          </div>
+          <div class="ecm-actions">
+            <button class="ecm-btn cancel" @click="pendingEvents = []">건너뛰기</button>
+            <button class="ecm-btn confirm" @click="confirmEvents" :disabled="!pendingEvents.some(e => e.checked)">
+              캘린더에 등록
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
     </template> <!-- end 내 스크럼 -->
 
   </div>
@@ -695,12 +742,13 @@ import { useRoute } from 'vue-router'
 import {
   Check, X, Plus, AlertTriangle, ClipboardList, Zap, CalendarPlus,
   GripVertical, ChevronDown, Clock, FileText, Target, ArrowRightCircle,
-  BarChart2, ChevronLeft, ChevronRight, CalendarDays, Download, Users, RefreshCw
+  BarChart2, ChevronLeft, ChevronRight, CalendarDays, Download, Users
 } from 'lucide-vue-next'
 import { useKpiStore } from '@/store/kpiStore'
 import { useOrgStore } from '@/store/orgStore'
 import { recordApi } from '@/api/kpiApi'
 import { scrumApi, syncApi } from '@/api/scrumApi'
+import { scheduleApi } from '@/api/scheduleApi'
 import TeamScrumPanel from '@/components/TeamScrumPanel.vue'
 import dayjs from 'dayjs'
 import 'dayjs/locale/ko'
@@ -1293,6 +1341,17 @@ function onDailyNumChange(kpi, e) {
 
 // ── Slack 동기화 ──
 const syncing = ref(false)
+const syncToast = ref('')
+const syncToastType = ref('success')
+const pendingEvents = ref([])
+let syncToastTimer = null
+
+function showSyncToast(msg, type = 'success') {
+  syncToast.value = msg
+  syncToastType.value = type
+  clearTimeout(syncToastTimer)
+  syncToastTimer = setTimeout(() => { syncToast.value = '' }, 3000)
+}
 
 async function syncSlack() {
   if (syncing.value) return
@@ -1300,23 +1359,53 @@ async function syncSlack() {
   try {
     const orgId = orgStore.currentOrg?.id ?? null
     const res = await syncApi.slack(orgId)
-    const msg = res.data?.message || 'Slack 동기화 완료'
-    alert(msg)
-    // loadDayFromServer는 orgStore 조건이 있으므로 직접 API 호출
+    // Axios 인터셉터가 response.data를 언래핑 → res = ApiResponse { success, message, data: { events } }
+    showSyncToast(res.message || 'Slack 동기화 완료', 'success')
+
+    // 스크럼 태스크 갱신
     try {
       const scrumRes = await scrumApi.me(today.value)
-      const scrum = scrumRes.data
-      if (scrum?.tasksJson) {
-        todayTasks.value = JSON.parse(scrum.tasksJson)
-      }
-    } catch (e) {
-      console.error('스크럼 갱신 실패', e)
+      if (scrumRes?.tasksJson) todayTasks.value = JSON.parse(scrumRes.tasksJson)
+    } catch (e) { console.error('스크럼 갱신 실패', e) }
+
+    // 감지된 일정이 있으면 확인 모달
+    const events = res.data?.events || []
+    if (events.length) {
+      pendingEvents.value = events.map(ev => ({ ...ev, checked: true }))
     }
   } catch (e) {
-    alert('Slack 동기화 실패: ' + (e.response?.data?.message || e.message))
+    showSyncToast('동기화 실패: ' + (e.response?.data?.message || e.message), 'error')
   } finally {
     syncing.value = false
   }
+}
+
+async function confirmEvents() {
+  const selected = pendingEvents.value.filter(e => e.checked)
+  const orgId = orgStore.currentOrg?.id ?? null
+
+  await Promise.all(selected.map(async ev => {
+    // 1. 캘린더(schedule 테이블)에 저장
+    await scheduleApi.create(ev.title, ev.eventDate, ev.eventTime || null)
+
+    // 2. 해당 날짜의 스크럼 태스크에도 추가
+    try {
+      const scrumRes = await scrumApi.me(ev.eventDate)
+      let tasks = []
+      try { tasks = JSON.parse(scrumRes?.data?.tasksJson || '[]') } catch {}
+      const taskTitle = ev.eventTime ? `[${ev.eventTime}] ${ev.title}` : ev.title
+      tasks.push({ id: String(Date.now() + Math.random()), title: taskTitle, done: false, priority: 'P2' })
+      await scrumApi.save({
+        date: ev.eventDate,
+        orgId,
+        tasksJson: JSON.stringify(tasks),
+        blocker: '', blockerSeverity: 'LOW', energy: 0, focus: ''
+      })
+    } catch (e) { console.error('해당 날짜 스크럼 저장 실패', e) }
+  }))
+
+  pendingEvents.value = []
+  showSyncToast(`일정 ${selected.length}개가 캘린더 및 해당 날짜 스크럼에 등록됐습니다.`, 'success')
 }
 
 // ── CSV 내보내기 ──
@@ -1441,15 +1530,56 @@ onUnmounted(() => {
 
 /* ── Slack 동기화 버튼 ── */
 .sync-btn {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 5px 11px; border-radius: 7px; font-size: 12px; font-weight: 600;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: 7px;
   border: 1px solid #4A5568; color: #A0AEC0; background: transparent;
-  cursor: pointer; transition: all .15s;
+  cursor: pointer; transition: all .15s; padding: 0; flex-shrink: 0;
 }
-.sync-btn:hover:not(:disabled) { border-color: #4F9CF9; color: #4F9CF9; background: rgba(79,156,249,0.07); }
+.sync-btn:hover:not(:disabled) { border-color: #E01E5A; color: #E01E5A; background: rgba(224,30,90,0.08); }
 .sync-btn:disabled { opacity: 0.5; cursor: default; }
 .sync-btn .spinning { animation: spin 1s linear infinite; }
+.slack-icon { display: block; flex-shrink: 0; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── 일정 확인 모달 ── */
+.event-confirm-modal {
+  background: #1a1f2e; border: 1px solid #2d3748; border-radius: 14px;
+  padding: 24px; width: 380px; max-width: 92vw;
+}
+.ecm-header {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 15px; font-weight: 700; color: #F0F4FF; margin-bottom: 6px;
+}
+.ecm-sub { font-size: 12px; color: #718096; margin: 0 0 16px; }
+.ecm-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+.ecm-item {
+  display: flex; align-items: center; gap: 12px;
+  background: #0f1521; border: 1px solid #2d3748; border-radius: 8px;
+  padding: 10px 12px; cursor: pointer;
+}
+.ecm-item:has(.ecm-checkbox:checked) { border-color: #E01E5A; background: rgba(224,30,90,0.06); }
+.ecm-checkbox { accent-color: #E01E5A; width: 16px; height: 16px; cursor: pointer; flex-shrink: 0; }
+.ecm-info { display: flex; flex-direction: column; gap: 2px; }
+.ecm-title { font-size: 13px; font-weight: 600; color: #E2E8F0; }
+.ecm-date { font-size: 11px; color: #E01E5A; font-weight: 500; }
+.ecm-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.ecm-btn { padding: 7px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all .15s; }
+.ecm-btn.cancel { background: transparent; border: 1px solid #4A5568; color: #A0AEC0; }
+.ecm-btn.cancel:hover { border-color: #718096; color: #E2E8F0; }
+.ecm-btn.confirm { background: #E01E5A; color: #fff; }
+.ecm-btn.confirm:hover:not(:disabled) { background: #c41a4f; }
+.ecm-btn.confirm:disabled { opacity: 0.4; cursor: default; }
+
+/* ── Slack 토스트 ── */
+.sync-toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 500;
+  z-index: 9999; box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  white-space: nowrap;
+}
+.sync-toast.success { background: #1a1f2e; border: 1px solid #E01E5A; color: #E01E5A; }
+.sync-toast.error   { background: #1a1f2e; border: 1px solid #EF4444; color: #EF4444; }
 
 /* ── 내보내기 버튼 ── */
 .export-btn {

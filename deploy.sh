@@ -43,9 +43,11 @@ if ! command -v mvn &>/dev/null; then
 fi
 echo "[OK] $(mvn -version 2>&1 | head -1)"
 
-# ── H2 데이터 디렉토리 ──
+# ── 데이터 디렉토리 (H2 DB + Jena TDB2) ──
 mkdir -p "$DATA_DIR"
+mkdir -p "$APP_DIR/data/jena-tdb"
 echo "[OK] 데이터 디렉토리: $DATA_DIR"
+echo "[OK] Jena TDB2 디렉토리: $APP_DIR/data/jena-tdb"
 
 # ── 백엔드 빌드 ──
 echo "[INFO] 백엔드 빌드 중..."

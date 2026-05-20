@@ -15,9 +15,12 @@ spring:
         options:
           model: llama-3.3-70b-versatile
           temperature: 0.7
-          max-tokens: 1024
+          max-tokens: 800
       embedding:
         enabled: false
+    retry:
+      max-attempts: 1
+      on-http-codes-to-retry: 429
 
 jwt:
   secret: ${JWT_SECRET}
@@ -32,6 +35,14 @@ mybatis:
   type-aliases-package: com.ptkt.model
   configuration:
     map-underscore-to-camel-case: true
+
+jena:
+  tdb2:
+    location: ./data/jena-tdb
+  ontology:
+    path: classpath:ontology/coopwork.ttl
+  sync:
+    on-startup: true
 
 server:
   port: 48080

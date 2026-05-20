@@ -1,0 +1,267 @@
+<mxfile host="Electron" agent="Mozilla/5.0" pages="2">
+  <diagram id="diagram_app" name="Application Architecture">
+    <mxGraphModel dx="1422" dy="857" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1300" pageHeight="850" background="#0B0F19" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <!-- 1. Client Tier Container -->
+        <mxCell id="c_client" value="Client Tier (Vue 3 Single Page Application)" style="fillColor=rgba(15,23,42,0.3);strokeColor=#3B82F6;strokeWidth=2;dashed=0;rounded=1;labelBackgroundColor=none;fontColor=#60A5FA;fontStyle=1;fontSize=14;align=left;spacingLeft=15;verticalAlign=top;spacingTop=10;fontFamily=Inter,Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="20" y="50" width="1260" height="200" as="geometry" />
+        </mxCell>
+        <!-- Vue Router -->
+        <mxCell id="n_router" value="&lt;b&gt;Vue Router&lt;/b&gt;&lt;br/&gt;&lt;font size=&quot;2&quot; color=&quot;#94A3B8&quot;&gt;Navigation &amp;amp; Layout&lt;br/&gt;Deep Linking&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#3B82F6;strokeWidth=2;fontColor=#F8FAFC;fontFamily=Inter,Helvetica;align=center;" vertex="1" parent="1">
+          <mxGeometry x="40" y="100" width="160" height="80" as="geometry" />
+        </mxCell>
+        <!-- Pinia Stores -->
+        <mxCell id="n_stores" value="&lt;b&gt;Pinia State Stores&lt;/b&gt;&lt;br/&gt;&lt;font size=&quot;1&quot; color=&quot;#94A3B8&quot;&gt;authStore, orgStore, wsStore, kpiStore&lt;br/&gt;burnoutStore, focusStore, chatStore, notificationStore&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#3B82F6;strokeWidth=2;fontColor=#F8FAFC;fontFamily=Inter,Helvetica;align=center;" vertex="1" parent="1">
+          <mxGeometry x="220" y="100" width="280" height="80" as="geometry" />
+        </mxCell>
+        <!-- Views & Components -->
+        <mxCell id="n_views" value="&lt;b&gt;Vue Views &amp;amp; Components&lt;/b&gt;&lt;br/&gt;&lt;font size=&quot;1&quot; color=&quot;#94A3B8&quot;&gt;Dashboard, TeamDashboard, Kanban, DailyScrum&lt;br/&gt;Calendar, Analytics, Record, KpiDetail, Review&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#3B82F6;strokeWidth=2;fontColor=#F8FAFC;fontFamily=Inter,Helvetica;align=center;" vertex="1" parent="1">
+          <mxGeometry x="520" y="100" width="280" height="80" as="geometry" />
+        </mxCell>
+        <!-- ECharts diagram -->
+        <mxCell id="n_echarts" value="&lt;b&gt;Apache ECharts&lt;/b&gt;&lt;br/&gt;&lt;font size=&quot;2&quot; color=&quot;#94A3B8&quot;&gt;OntologyView (Semantic Graph)&lt;br/&gt;AnalyticsView (Charts)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#3B82F6;strokeWidth=2;fontColor=#F8FAFC;fontFamily=Inter,Helvetica;align=center;" vertex="1" parent="1">
+          <mxGeometry x="820" y="100" width="220" height="80" as="geometry" />
+        </mxCell>
+        <!-- HTTP/WS Client -->
+        <mxCell id="n_clients" value="&lt;b&gt;API Client Layer (Axios HTTP API Client &amp;amp; STOMP WebSocket Client)&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;strokeColor=#1E40AF;strokeWidth=1.5;fontColor=#93C5FD;fontFamily=Inter,Helvetica;align=center;" vertex="1" parent="1">
+          <mxGeometry x="220" y="200" width="820" height="35" as="geometry" />
+        </mxCell>
+
+        <!-- 2. Server Tier Container -->
+        <mxCell id="c_server" value="Backend API Server (Spring Boot 3.2.5 Application)" style="fillColor=rgba(15,23,42,0.3);strokeColor=#8B5CF6;strokeWidth=2;dashed=0;rounded=1;labelBackgroundColor=none;fontColor=#A78BFA;fontStyle=1;fontSize=14;align=left;spacingLeft=15;verticalAlign=top;spacingTop=10;fontFamily=Inter,Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="20" y="280" width="1260" height="330" as="geometry" />
+        </mxCell>
+        <!-- REST Controllers -->
+        <mxCell id="n_controllers" value="&lt;b&gt;REST Controllers&lt;/b&gt;&lt;br/&gt;&lt;font size=&quot;1&quot; color=&quot;#94A3B8&quot;&gt;Auth, Org, TeamDashboard, Task, Scrum&lt;br/&gt;Kpi, Chat, Ai, Burnout, Export, Sync...&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#8B5CF6;strokeWidth=2;fontColor=#F8FAFC;fontFamily=Inter,Helvetica;align=center;" vertex="1" parent="1">
+          <mxGeometry x="40" y="340" width="240" height="70" as="geometry" />
+        </mxCell>
+        <!-- Spring Security & JWT -->
+        <mxCell id="n_security" value="&lt;b&gt;Spring Security&lt;/b&gt;&lt;br/&gt;&lt;font size=&quot;2&quot; color=&quot;#94A3B8&quot;&gt;Stateless JWT Authentication&lt;br/&gt;JwtAuthFilter &amp;amp; JwtUtil&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#8B5CF6;strokeWidth=2;fontColor=#F8FAFC;fontFamily=Inter,Helvetica;align=center;" vertex="1" parent="1">
+          <mxGeometry x="40" y="440" width="240" height="70" as="geometry" />
+        </mxCell>
+        <!-- WS Message Broker -->
+        <mxCell id="n_broker" value="&lt;b&gt;WebSocket Message Broker&lt;/b&gt;&lt;br/&gt;&lt;font size=&quot;2&quot; color=&quot;#94A3B8&quot;&gt;STOMP / SockJS Protocol&lt;br/&gt;In-Memory Broker (/topic, /queue)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#8B5CF6;strokeWidth=2;fontColor=#F8FAFC;fontFamily=Inter,Helvetica;align=center;" vertex="1" parent="1">
+          <mxGeometry x="300" y="340" width="210" height="70" as="geometry" />
+        </mxCell>
+        <!-- RealtimeService -->
+        <mxCell id="n_realtime" value="&lt;b&gt;RealtimeService&lt;/b&gt;&lt;br/&gt;&lt;font size=&quot;2&quot; color=&quot;#94A3B8&quot;&gt;Live WS Broadcasts&lt;br/&gt;(Tasks, Scrums, Team Chat)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#8B5CF6;strokeWidth=2;fontColor=#F8FAFC;fontFamily=Inter,Helvetica;align=center;" vertex="1" parent="1">
+          <mxGeometry x="300" y="440" width="210" height="70" as="geometry" />
+        </mxCell>
+        <!-- Spring AI Groq Core -->
+        <mxCell id="n_ai" value="&lt;b&gt;Spring AI &amp;amp; Groq Core&lt;/b&gt;&lt;br/&gt;&lt;font size=&quot;2&quot; color=&quot;#94A3B8&quot;&gt;AiService, AiChatService, VectorStoreService&lt;br/&gt;llama-3.3-70b-versatile Model&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#8B5CF6;strokeWidth=2;fontColor=#F8FAFC;fontFamily=Inter,Helvetica;align=center;" vertex="1" parent="1">
+          <mxGeometry x="530" y="340" width="260" height="70" as="geometry" />
+        </mxCell>
+        <!-- MCP Tools Configuration -->
+        <mxCell id="n_mcp" value="&lt;b&gt;MCP Tools Engine&lt;/b&gt;&lt;br/&gt;&lt;font size=&quot;2&quot; color=&quot;#94A3B8&quot;&gt;Spring @Bean Function Calling&lt;br/&gt;(DbQuery, Sparql, SlackSend)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#8B5CF6;strokeWidth=2;fontColor=#F8FAFC;fontFamily=Inter,Helvetica;align=center;" vertex="1" parent="1">
+          <mxGeometry x="530" y="440" width="260" height="70" as="geometry" />
+        </mxCell>
+        <!-- Business Services -->
+        <mxCell id="n_services" value="&lt;b&gt;Business Services&lt;/b&gt;&lt;br/&gt;&lt;font size=&quot;1&quot; color=&quot;#94A3B8&quot;&gt;Organization, Task, Kpi, Dashboard, Sync,&lt;br/&gt;Chat, Notification, Slack, Ontology...&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#8B5CF6;strokeWidth=2;fontColor=#F8FAFC;fontFamily=Inter,Helvetica;align=center;" vertex="1" parent="1">
+          <mxGeometry x="810" y="340" width="240" height="70" as="geometry" />
+        </mxCell>
+        <!-- Persistence (MyBatis / JDBC) -->
+        <mxCell id="n_mappers" value="&lt;b&gt;Persistence Layer&lt;/b&gt;&lt;br/&gt;&lt;font size=&quot;1&quot; color=&quot;#94A3B8&quot;&gt;MyBatis XML (UserMapper, TaskMapper, OrgMapper...)&lt;br/&gt;Spring JdbcTemplate Engine&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#8B5CF6;strokeWidth=2;fontColor=#F8FAFC;fontFamily=Inter,Helvetica;align=center;" vertex="1" parent="1">
+          <mxGeometry x="810" y="440" width="240" height="70" as="geometry" />
+        </mxCell>
+        <!-- Ontology Service -->
+        <mxCell id="n_ontology_svc" value="&lt;b&gt;OntologyService (Apache Jena Semantic Mapping Engine &amp;amp; SPARQL Executor)&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#4C1D95;strokeColor=#A78BFA;strokeWidth=1.5;fontColor=#DDD6FE;fontFamily=Inter,Helvetica;align=center;" vertex="1" parent="1">
+          <mxGeometry x="300" y="550" width="750" height="35" as="geometry" />
+        </mxCell>
+
+        <!-- 3. Storage Tier Container -->
+        <mxCell id="c_storage" value="Data &amp; Knowledge Storage Tier" style="fillColor=rgba(15,23,42,0.3);strokeColor=#10B981;strokeWidth=2;dashed=0;rounded=1;labelBackgroundColor=none;fontColor=#34D399;fontStyle=1;fontSize=14;align=left;spacingLeft=15;verticalAlign=top;spacingTop=10;fontFamily=Inter,Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="20" y="650" width="1260" height="175" as="geometry" />
+        </mxCell>
+        <!-- H2 DB -->
+        <mxCell id="n_h2_db" value="&lt;b&gt;H2 Relational Database&lt;/b&gt;&lt;br/&gt;&lt;font size=&quot;2&quot; color=&quot;#94A3B8&quot;&gt;MySQL Mode File Storage&lt;br/&gt;users, tasks, kpis, scrums, chats...&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#10B981;strokeWidth=2;fontColor=#F8FAFC;fontFamily=Inter,Helvetica;align=center;" vertex="1" parent="1">
+          <mxGeometry x="40" y="710" width="260" height="85" as="geometry" />
+        </mxCell>
+        <!-- Apache Jena TDB2 -->
+        <mxCell id="n_jena_tdb" value="&lt;b&gt;Apache Jena TDB2 Dataset&lt;/b&gt;&lt;br/&gt;&lt;font size=&quot;2&quot; color=&quot;#94A3B8&quot;&gt;RDF Triple Store (coopwork.ttl)&lt;br/&gt;Semantic knowledge models&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#10B981;strokeWidth=2;fontColor=#F8FAFC;fontFamily=Inter,Helvetica;align=center;" vertex="1" parent="1">
+          <mxGeometry x="380" y="710" width="290" height="85" as="geometry" />
+        </mxCell>
+        <!-- Spring AI SimpleVectorStore -->
+        <mxCell id="n_vector_store" value="&lt;b&gt;Simple Vector Store (JSON)&lt;/b&gt;&lt;br/&gt;&lt;font size=&quot;2&quot; color=&quot;#94A3B8&quot;&gt;Spring AI Local Embedding Storage&lt;br/&gt;Vectorizes Scrum text &amp;amp; tasks&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#10B981;strokeWidth=2;fontColor=#F8FAFC;fontFamily=Inter,Helvetica;align=center;" vertex="1" parent="1">
+          <mxGeometry x="750" y="710" width="300" height="85" as="geometry" />
+        </mxCell>
+
+        <!-- 4. External Cloud Entities -->
+        <mxCell id="n_groq_api" value="&lt;b&gt;Groq LLM Cloud API&lt;/b&gt;&lt;br/&gt;&lt;font size=&quot;2&quot; color=&quot;#94A3B8&quot;&gt;https://api.groq.com/openai&lt;br/&gt;llama-3.3-70b inference&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#EF4444;strokeWidth=2;fontColor=#F8FAFC;fontFamily=Inter,Helvetica;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="340" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="n_slack_api" value="&lt;b&gt;Slack API / Webhooks&lt;/b&gt;&lt;br/&gt;&lt;font size=&quot;2&quot; color=&quot;#94A3B8&quot;&gt;External SaaS integration&lt;br/&gt;Team workspace channels&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#EF4444;strokeWidth=2;fontColor=#F8FAFC;fontFamily=Inter,Helvetica;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="440" width="180" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- Connections (Page 1) -->
+        <mxCell id="e_c1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#3B82F6;strokeWidth=1.5;endArrow=classic;" edge="1" parent="1" source="n_router" target="n_views">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_c2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#3B82F6;strokeWidth=1.5;endArrow=classic;" edge="1" parent="1" source="n_views" target="n_stores">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_c3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#3B82F6;strokeWidth=1.5;endArrow=classic;" edge="1" parent="1" source="n_views" target="n_echarts">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_c4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#2563EB;strokeWidth=1.5;endArrow=classic;" edge="1" parent="1" source="n_stores" target="n_clients">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_c5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#2563EB;strokeWidth=1.5;endArrow=classic;" edge="1" parent="1" source="n_echarts" target="n_clients">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_cs1" value="HTTPS REST (Axios)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#60A5FA;strokeWidth=2;endArrow=classic;exitX=0.25;exitY=1;entryX=0.5;entryY=0;exitDx=0;exitDy=0;" edge="1" parent="1" source="n_clients" target="n_controllers">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_cs2" value="WS Connection" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#818CF8;strokeWidth=2;endArrow=classic;exitX=0.5;exitY=1;entryX=0.5;entryY=0;exitDx=0;exitDy=0;" edge="1" parent="1" source="n_clients" target="n_broker">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_s1" value="Authorize &amp; Filter JWT" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#A78BFA;strokeWidth=1.5;endArrow=classic;" edge="1" parent="1" source="n_controllers" target="n_security">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_s2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#A78BFA;strokeWidth=1.5;endArrow=classic;" edge="1" parent="1" source="n_broker" target="n_realtime">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_s3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#8B5CF6;strokeWidth=1.5;endArrow=classic;exitX=1;exitY=0.5;entryX=0;entryY=0.5;exitDx=0;exitDy=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_controllers" target="n_services">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_s4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#8B5CF6;strokeWidth=1.5;endArrow=classic;" edge="1" parent="1" source="n_services" target="n_mappers">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_s5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#8B5CF6;strokeWidth=1.5;endArrow=classic;" edge="1" parent="1" source="n_services" target="n_realtime">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_s6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#8B5CF6;strokeWidth=1.5;endArrow=classic;" edge="1" parent="1" source="n_services" target="n_ai">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_s7" value="Function Calling" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#8B5CF6;strokeWidth=1.5;endArrow=classic;" edge="1" parent="1" source="n_ai" target="n_mcp">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_s8" value="queryDatabase" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#A78BFA;strokeWidth=1.5;endArrow=classic;exitX=0.25;exitY=1;entryX=0.75;entryY=0;exitDx=0;exitDy=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_mcp" target="n_h2_db">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_s9" value="queryKnowledgeGraph" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#C084FC;strokeWidth=1.5;endArrow=classic;exitX=0.5;exitY=1;entryX=0.6;entryY=0;exitDx=0;exitDy=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_mcp" target="n_ontology_svc">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_s10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#8B5CF6;strokeWidth=1.5;endArrow=classic;exitX=0.75;exitY=1;entryX=0.75;entryY=0;exitDx=0;exitDy=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_services" target="n_ontology_svc">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_db1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#10B981;strokeWidth=2;endArrow=classic;" edge="1" parent="1" source="n_mappers" target="n_h2_db">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_db2" value="JDBC syncAll" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#10B981;strokeWidth=1.5;endArrow=classic;exitX=0.25;exitY=1;entryX=0.75;entryY=0;exitDx=0;exitDy=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_ontology_svc" target="n_h2_db">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_db3" value="TDB2 connection" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#10B981;strokeWidth=2;endArrow=classic;" edge="1" parent="1" source="n_ontology_svc" target="n_jena_tdb">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_db4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#10B981;strokeWidth=1.5;endArrow=classic;exitX=0.75;exitY=1;entryX=0.25;entryY=0;exitDx=0;exitDy=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_ai" target="n_vector_store">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_sync_flow" value="Ontology Mapping Sync (SQL → RDF)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#F59E0B;strokeWidth=2;endArrow=classic;exitX=1;exitY=0.5;entryX=0;entryY=0.5;exitDx=0;exitDy=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_h2_db" target="n_jena_tdb">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_ext1" value="REST LLM Call" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#EF4444;strokeWidth=1.5;endArrow=classic;" edge="1" parent="1" source="n_ai" target="n_groq_api">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_ext2" value="Outgoing API Webhook" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#EF4444;strokeWidth=1.5;endArrow=classic;exitX=1;exitY=0.75;entryX=0;entryY=0.75;exitDx=0;exitDy=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_services" target="n_slack_api">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_ext3" value="sendSlackMessage" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#EF4444;strokeWidth=1.5;endArrow=classic;" edge="1" parent="1" source="n_mcp" target="n_slack_api">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="diagram_infra" name="Cloud Infrastructure Architecture">
+    <mxGraphModel dx="1837" dy="1007" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1300" pageHeight="850" background="#0B0F19" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="c_aws" parent="1" style="fillColor=rgba(15,23,42,0.1);strokeColor=#FF9900;strokeWidth=2;dashed=0;rounded=1;labelBackgroundColor=none;fontColor=#FF9900;fontStyle=1;fontSize=14;align=left;spacingLeft=15;verticalAlign=top;spacingTop=10;fontFamily=Inter,Helvetica;" value="AWS Cloud Platform (SaaS / Infrastructure Hosting)" vertex="1">
+          <mxGeometry height="720" width="1050" x="100" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="c_vpc" parent="1" style="fillColor=rgba(15,23,42,0.2);strokeColor=#0284C7;strokeWidth=1.5;dashed=1;rounded=1;labelBackgroundColor=none;fontColor=#38BDF8;fontStyle=1;fontSize=12;align=left;spacingLeft=15;verticalAlign=top;spacingTop=10;fontFamily=Inter,Helvetica;" value="Virtual Private Cloud (VPC)" vertex="1">
+          <mxGeometry height="630" width="970" x="140" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="c_subnet" parent="1" style="fillColor=rgba(15,23,42,0.3);strokeColor=#0369A1;strokeWidth=1.5;dashed=1;rounded=1;labelBackgroundColor=none;fontColor=#0EA5E9;fontStyle=1;fontSize=12;align=left;spacingLeft=15;verticalAlign=top;spacingTop=10;fontFamily=Inter,Helvetica;" value="Public Subnet (Internet-Facing Segment)" vertex="1">
+          <mxGeometry height="540" width="890" x="180" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="c_ec2" parent="1" style="fillColor=rgba(30,41,59,0.3);strokeColor=#F97316;strokeWidth=2;dashed=0;rounded=1;labelBackgroundColor=none;fontColor=#FB923C;fontStyle=1;fontSize=13;align=left;spacingLeft=15;verticalAlign=top;spacingTop=10;fontFamily=Inter,Helvetica;" value="Amazon EC2 Compute Instance (Ubuntu 22.04 LTS)" vertex="1">
+          <mxGeometry height="460" width="810" x="220" y="220" as="geometry" />
+        </mxCell>
+        <mxCell id="n_nginx" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#F97316;strokeWidth=2;fontColor=#F8FAFC;fontFamily=Inter,Helvetica;align=center;" value="&lt;b&gt;Nginx Web Server&lt;/b&gt;&lt;br/&gt;&lt;font size=&quot;2&quot; color=&quot;#94A3B8&quot;&gt;Listens on Port 80 (HTTP)&lt;br/&gt;Performs Reverse Proxy&lt;br/&gt;Enables WS Upgrades&lt;/font&gt;" vertex="1">
+          <mxGeometry height="60" width="200" x="525" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="n_systemd" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#475569;strokeWidth=1.5;fontColor=#E2E8F0;fontFamily=Inter,Helvetica;align=center;" value="&lt;b&gt;systemd supervisor&lt;/b&gt;&lt;br/&gt;&lt;font size=&quot;2&quot; color=&quot;#94A3B8&quot;&gt;Manages workoop.service&lt;br/&gt;Auto-restarts on failure&lt;/font&gt;" vertex="1">
+          <mxGeometry height="60" width="180" x="250" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="n_jar" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#F97316;strokeWidth=2;fontColor=#F8FAFC;fontFamily=Inter,Helvetica;align=center;" value="&lt;b&gt;Spring Boot Application Process&lt;/b&gt;&lt;br/&gt;&lt;font size=&quot;2&quot; color=&quot;#E2E8F0&quot;&gt;&lt;i&gt;ExecStart: java -jar ptkt-backend-1.0.0.jar&lt;/i&gt;&lt;/font&gt;&lt;br/&gt;&lt;font size=&quot;2&quot; color=&quot;#94A3B8&quot;&gt;Runs at local Port 48080 (embedded Tomcat)&lt;br/&gt;Combines backend API and compiled Vue 3 assets&lt;/font&gt;" vertex="1">
+          <mxGeometry height="90" width="310" x="470" y="370" as="geometry" />
+        </mxCell>
+        <mxCell id="n_env" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#475569;strokeWidth=1.5;fontColor=#CBD5E1;fontFamily=Inter,Helvetica;align=center;" value="&lt;b&gt;Environment Variables&lt;/b&gt;&lt;br/&gt;&lt;font size=&quot;2&quot; color=&quot;#94A3B8&quot;&gt;/etc/workoop.env&lt;br/&gt;(GROQ_API_KEY, secrets)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="60" width="150" x="250" y="385" as="geometry" />
+        </mxCell>
+        <mxCell id="c_storage_files" parent="1" style="fillColor=rgba(15,23,42,0.4);strokeColor=#10B981;strokeWidth=1.5;dashed=1;rounded=1;labelBackgroundColor=none;fontColor=#34D399;fontStyle=1;fontSize=12;align=left;spacingLeft=15;verticalAlign=top;spacingTop=10;fontFamily=Inter,Helvetica;" value="Local Instance Storage (Amazon EBS Volume)" vertex="1">
+          <mxGeometry height="160" width="750" x="250" y="490" as="geometry" />
+        </mxCell>
+        <mxCell id="n_h2_file" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#10B981;strokeWidth=2;fontColor=#F8FAFC;fontFamily=Inter,Helvetica;align=center;" value="&lt;b&gt;H2 Relational Database&lt;/b&gt;&lt;br/&gt;&lt;font size=&quot;2&quot; color=&quot;#94A3B8&quot;&gt;/data/ptkt-db.mv.db&lt;br/&gt;&lt;i&gt;AUTO_SERVER=TRUE&lt;br/&gt;mode=MySQL dialect&lt;/i&gt;&lt;/font&gt;" vertex="1">
+          <mxGeometry height="80" width="220" x="270" y="550" as="geometry" />
+        </mxCell>
+        <mxCell id="n_jena_dir" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#10B981;strokeWidth=2;fontColor=#F8FAFC;fontFamily=Inter,Helvetica;align=center;" value="&lt;b&gt;Apache Jena TDB2 Folder&lt;/b&gt;&lt;br/&gt;&lt;font size=&quot;2&quot; color=&quot;#94A3B8&quot;&gt;/data/jena-tdb/&lt;br/&gt;&lt;i&gt;RDF triple index files&lt;br/&gt;(SPO, journal.jrnl, nodes.dat)&lt;/i&gt;&lt;/font&gt;" vertex="1">
+          <mxGeometry height="80" width="230" x="510" y="550" as="geometry" />
+        </mxCell>
+        <mxCell id="n_vector_file" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#10B981;strokeWidth=2;fontColor=#F8FAFC;fontFamily=Inter,Helvetica;align=center;" value="&lt;b&gt;Vector Store File&lt;/b&gt;&lt;br/&gt;&lt;font size=&quot;2&quot; color=&quot;#94A3B8&quot;&gt;/data/vectorstore.json&lt;br/&gt;&lt;i&gt;Spring AI Embedding State&lt;/i&gt;&lt;/font&gt;" vertex="1">
+          <mxGeometry height="80" width="220" x="760" y="550" as="geometry" />
+        </mxCell>
+
+        <mxCell id="n_browser" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#3B82F6;strokeWidth=2;fontColor=#F8FAFC;fontFamily=Inter,Helvetica;align=center;" value="&lt;b&gt;User Web Browser&lt;/b&gt;&lt;br/&gt;&lt;font size=&quot;2&quot; color=&quot;#94A3B8&quot;&gt;Accesses http://&amp;lt;EC2-IP&amp;gt;&lt;br/&gt;Loads Vue 3 JS &amp;amp; CSS&lt;br/&gt;Executes REST &amp;amp; live WS&lt;/font&gt;" vertex="1">
+          <mxGeometry height="80" width="180" x="-160" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="n_igw" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#475569;strokeWidth=1.5;fontColor=#CBD5E1;fontFamily=Inter,Helvetica;align=center;" value="&lt;b&gt;Internet Gateway&lt;/b&gt;&lt;br/&gt;&lt;font size=&quot;2&quot; color=&quot;#94A3B8&quot;&gt;Route 53 Routing &amp;amp;&lt;br/&gt;AWS Internet Gateway&lt;/font&gt;" vertex="1">
+          <mxGeometry height="60" width="120" x="-10" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="n_groq_cloud" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#EF4444;strokeWidth=2;fontColor=#F8FAFC;fontFamily=Inter,Helvetica;align=center;" value="&lt;b&gt;Groq Cloud Platform&lt;/b&gt;&lt;br/&gt;&lt;font size=&quot;2&quot; color=&quot;#94A3B8&quot;&gt;https://api.groq.com/&lt;br/&gt;Inference API for Groq LLM&lt;/font&gt;" vertex="1">
+          <mxGeometry height="70" width="180" x="1190" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="n_slack_cloud" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#EF4444;strokeWidth=2;fontColor=#F8FAFC;fontFamily=Inter,Helvetica;align=center;" value="&lt;b&gt;Slack API SaaS Cloud&lt;/b&gt;&lt;br/&gt;&lt;font size=&quot;2&quot; color=&quot;#94A3B8&quot;&gt;https://slack.com/&lt;br/&gt;Accepts webhook messages&lt;br/&gt;for team Slack channels&lt;/font&gt;" vertex="1">
+          <mxGeometry height="70" width="180" x="1190" y="380" as="geometry" />
+        </mxCell>
+
+        <!-- Infrastructure Edges -->
+        <mxCell id="e_inf1" edge="1" parent="1" source="n_browser" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#3B82F6;strokeWidth=1.5;endArrow=classic;" target="n_igw" value="HTTP (Port 80) / WS">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_inf2" edge="1" parent="1" source="n_igw" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#3B82F6;strokeWidth=2;endArrow=classic;" target="n_nginx">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_inf3" edge="1" parent="1" source="n_nginx" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#F97316;strokeWidth=2;endArrow=classic;" target="n_jar" value="Proxy Pass to localhost:48080">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_inf4" edge="1" parent="1" source="n_systemd" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#475569;strokeWidth=1.5;endArrow=classic;" target="n_jar" value="Spawns Java process">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_inf5" edge="1" parent="1" source="n_env" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#475569;strokeWidth=1.5;endArrow=classic;" target="n_systemd" value="Injects variables">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_inf6" edge="1" parent="1" source="n_jar" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#10B981;strokeWidth=2;endArrow=classic;exitX=0.25;exitY=1;entryX=0.5;entryY=0;exitDx=0;exitDy=0;" target="n_h2_file" value="JDBC Queries">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_inf7" edge="1" parent="1" source="n_jar" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#10B981;strokeWidth=2;endArrow=classic;exitX=0.5;exitY=1;entryX=0.5;entryY=0;exitDx=0;exitDy=0;" target="n_jena_dir" value="Jena TDB2 ops">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_inf7_v" edge="1" parent="1" source="n_jar" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#10B981;strokeWidth=2;endArrow=classic;exitX=0.75;exitY=1;entryX=0.5;entryY=0;exitDx=0;exitDy=0;" target="n_vector_file" value="Vector I/O">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_inf8" edge="1" parent="1" source="n_jar" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#EF4444;strokeWidth=1.5;endArrow=classic;exitX=1;exitY=0.25;entryX=0;entryY=0.5;exitDx=0;exitDy=0;" target="n_groq_cloud" value="HTTPS REST Model Call">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_inf9" edge="1" parent="1" source="n_jar" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#EF4444;strokeWidth=1.5;endArrow=classic;exitX=1;exitY=0.75;entryX=0;entryY=0.5;exitDx=0;exitDy=0;" target="n_slack_cloud" value="HTTPS Slack Webhook Call">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

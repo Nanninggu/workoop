@@ -68,8 +68,49 @@ public class SyncService {
 
         lastSyncMap.put(userId, Instant.now().getEpochSecond());
 
-        log.info("Slack 증분 동기화 완료: userId={}, 새 메시지={}개", userId, messages.size());
-        return new SyncResult(true, "Slack 동기화 완료 (새 메시지 " + messages.size() + "개)", mergedTasksJson);
+        List<DetectedEvent> events = detectEvents(messages);
+        log.info("Slack 증분 동기화 완료: userId={}, 새 메시지={}개, 감지된 일정={}개", userId, messages.size(), events.size());
+        return new SyncResult(true, "Slack 동기화 완료 (새 메시지 " + messages.size() + "개)", mergedTasksJson, events);
+    }
+
+    private List<DetectedEvent> detectEvents(List<String> messages) {
+        try {
+            String combined = String.join("\n", messages);
+            String today = LocalDate.now().toString();
+            String prompt = """
+                    오늘 날짜: %s
+                    아래 Slack 메시지에서 날짜와 시간이 명시된 회의, 미팅, 일정, 행사를 찾아주세요.
+
+                    [Slack 메시지]
+                    %s
+
+                    날짜/시간이 있는 일정만 JSON 배열로 응답하세요. 없으면 빈 배열 []로만 응답.
+                    [{"title":"일정명","eventDate":"YYYY-MM-DD","eventTime":"HH:mm"}]
+                    - eventDate: 연도가 없으면 올해 기준으로 추론
+                    - eventTime: 시간 없으면 null
+                    - 다른 텍스트 없이 JSON만 응답
+                    """.formatted(today, combined);
+
+            String response = chatClientBuilder.build().prompt(prompt).call().content().trim();
+            int start = response.indexOf('['), end = response.lastIndexOf(']');
+            if (start < 0 || end <= start) return List.of();
+            response = response.substring(start, end + 1);
+
+            List<DetectedEvent> result = new ArrayList<>();
+            com.fasterxml.jackson.databind.JsonNode arr = objectMapper.readTree(response);
+            for (com.fasterxml.jackson.databind.JsonNode n : arr) {
+                String title = n.path("title").asText(null);
+                String date  = n.path("eventDate").asText(null);
+                String time  = n.path("eventTime").asText(null);
+                if (title != null && date != null) {
+                    result.add(new DetectedEvent(title, date, "null".equals(time) ? null : time));
+                }
+            }
+            return result;
+        } catch (Exception e) {
+            log.warn("[Sync] 일정 감지 실패: {}", e.getMessage());
+            return List.of();
+        }
     }
 
     private String mergeTasks(Long userId, String newTasksJson) {
@@ -118,8 +159,12 @@ public class SyncService {
             String combined = String.join("\n", messages);
 
             String prompt = """
+                    오늘 날짜: %s
                     아래는 Slack에서 수집한 업무 메시지들입니다.
-                    각 메시지를 분석하여 업무 항목으로 변환해주세요.
+                    오늘 해야 할 업무 항목으로만 변환해주세요.
+
+                    중요: "N월 N일", "다음주" 처럼 특정 미래 날짜가 명시된 회의/미팅/행사는 제외하세요.
+                    오늘 진행 중이거나 오늘 처리할 업무만 포함하세요.
 
                     [Slack 메시지]
                     %s
@@ -132,7 +177,8 @@ public class SyncService {
                     - title: 한 줄 업무 요약
                     - star: STAR 기법으로 정리한 내용 (S/T/A/R 각각 한 문장)
                     - done: false로 설정
-                    """.formatted(combined);
+                    - 해당하는 업무가 없으면 빈 배열 []로만 응답
+                    """.formatted(LocalDate.now(), combined);
 
             String response = chatClient.prompt(prompt).call().content().trim();
 
@@ -171,5 +217,11 @@ public class SyncService {
                 .build();
     }
 
-    public record SyncResult(boolean success, String message, String tasksJson) {}
+    public record SyncResult(boolean success, String message, String tasksJson, List<DetectedEvent> events) {
+        public SyncResult(boolean success, String message, String tasksJson) {
+            this(success, message, tasksJson, List.of());
+        }
+    }
+
+    public record DetectedEvent(String title, String eventDate, String eventTime) {}
 }

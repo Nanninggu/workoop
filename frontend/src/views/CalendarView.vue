@@ -7,7 +7,7 @@
         <div class="cal-nav">
           <el-button circle @click="changeMonth(-1)"><ChevronLeft :size="16"/></el-button>
           <span class="cal-title">{{ dayjs(viewDate).format('YYYY년 MM월') }}</span>
-          <el-button circle @click="changeMonth(1)" :disabled="isCurrentMonth">
+          <el-button circle @click="changeMonth(1)" :disabled="isMaxFutureMonth">
             <ChevronRight :size="16"/>
           </el-button>
           <el-button size="small" plain @click="goCurrentMonth" v-if="!isCurrentMonth">이번 달</el-button>
@@ -77,6 +77,12 @@
               <span>{{ getScrumData(day).done }}/{{ getScrumData(day).total }}</span>
             </div>
 
+            <!-- 일정 배지 -->
+            <div v-if="getSchedules(day).length" class="cal-schedule-badge">
+              <span class="schedule-dot"></span>
+              <span>{{ getSchedules(day).length }}개 일정</span>
+            </div>
+
             <div v-if="isToday(day)" class="today-dot"></div>
           </div>
         </div>
@@ -104,8 +110,27 @@
         <!-- 패널 바디 (스크롤) -->
         <div class="panel-body">
 
+          <!-- 일정 섹션 (항상 표시) -->
+          <div v-if="panelSchedules.length" class="panel-section">
+            <div class="panel-section-title">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="13" height="13" fill="#E01E5A" style="flex-shrink:0">
+                <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/>
+              </svg>
+              Slack 일정
+            </div>
+            <div v-for="s in panelSchedules" :key="s.id" class="panel-schedule-item">
+              <div class="psi-info">
+                <span class="psi-time" v-if="s.eventTime">{{ s.eventTime }}</span>
+                <span class="psi-title">{{ s.title }}</span>
+              </div>
+              <button class="psi-del" @click="removeSchedule(s.id)" title="삭제">
+                <X :size="12" />
+              </button>
+            </div>
+          </div>
+
           <!-- 데이터 없음 -->
-          <div v-if="!panelKpiData && !panelScrumData" class="panel-empty">
+          <div v-if="!panelKpiData && !panelScrumData && !panelSchedules.length" class="panel-empty">
             <CalendarDays :size="32" class="panel-empty-icon" />
             <p>이 날의 기록이 없습니다.</p>
             <button class="panel-go-btn primary" @click="goToScrum">
@@ -249,6 +274,7 @@ import { useRouter } from 'vue-router'
 import dayjs from 'dayjs'
 import 'dayjs/locale/ko'
 import { recordApi } from '@/api/kpiApi'
+import { scheduleApi } from '@/api/scheduleApi'
 import { useKpiStore } from '@/store/kpiStore'
 import {
   ChevronLeft, ChevronRight, Minus, CheckSquare, CalendarDays,
@@ -268,6 +294,8 @@ const selectedDate = ref(null)   // 'YYYY-MM-DD' 형식
 const weekDays = ['일', '월', '화', '수', '목', '금', '토']
 
 const isCurrentMonth = computed(() => viewDate.value === dayjs().format('YYYY-MM'))
+const maxFutureMonth = dayjs().add(6, 'month').format('YYYY-MM')
+const isMaxFutureMonth = computed(() => viewDate.value >= maxFutureMonth)
 const daysInMonth    = computed(() => dayjs(viewDate.value + '-01').daysInMonth())
 const startPadding   = computed(() => dayjs(viewDate.value + '-01').day())
 
@@ -336,6 +364,40 @@ function getScrumData(day) {
 const scrumMonthSummary = computed(() => ({
   activeDays: Object.keys(scrumDataMap.value).length
 }))
+
+// ── 일정(schedule) 데이터 ──
+const schedules = ref([])
+
+const scheduleMap = computed(() => {
+  const map = {}
+  schedules.value.forEach(s => {
+    if (!map[s.eventDate]) map[s.eventDate] = []
+    map[s.eventDate].push(s)
+  })
+  return map
+})
+
+function getSchedules(day) {
+  return scheduleMap.value[`${viewDate.value}-${String(day).padStart(2, '0')}`] || []
+}
+
+const panelSchedules = computed(() =>
+  selectedDate.value ? (scheduleMap.value[selectedDate.value] || []) : []
+)
+
+async function loadSchedules() {
+  const from = `${viewDate.value}-01`
+  const to   = dayjs(viewDate.value + '-01').endOf('month').format('YYYY-MM-DD')
+  try {
+    const res = await scheduleApi.list(from, to)
+    schedules.value = res.data || []
+  } catch (e) { console.error('일정 조회 실패', e) }
+}
+
+async function removeSchedule(id) {
+  await scheduleApi.remove(id)
+  schedules.value = schedules.value.filter(s => s.id !== id)
+}
 
 // ── 패널 데이터 ──
 const panelKpiData  = computed(() => selectedDate.value ? dayDataMap.value[selectedDate.value] || null : null)
@@ -456,6 +518,7 @@ async function loadData() {
   } finally {
     loading.value = false
   }
+  loadSchedules()
 }
 
 function changeMonth(delta) {
@@ -556,6 +619,27 @@ onMounted(loadData)
   position: absolute; top: 5px; right: 5px;
   width: 5px; height: 5px; border-radius: 50%; background: var(--color-project);
 }
+.cal-schedule-badge {
+  display: flex; align-items: center; gap: 3px;
+  margin-top: 3px; font-size: 0.62rem; font-weight: 600;
+  color: #E01E5A; background: rgba(224,30,90,0.1); border-radius: 3px; padding: 1px 4px; width: fit-content;
+}
+.schedule-dot { width: 5px; height: 5px; border-radius: 50%; background: #E01E5A; flex-shrink: 0; }
+
+/* ── 패널 일정 ── */
+.panel-schedule-item {
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(224,30,90,0.07); border: 1px solid rgba(224,30,90,0.2);
+  border-radius: 7px; padding: 8px 10px;
+}
+.psi-info { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.psi-time { font-size: 11px; font-weight: 700; color: #E01E5A; flex-shrink: 0; }
+.psi-title { font-size: 12px; color: #E2E8F0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.psi-del {
+  background: none; border: none; cursor: pointer; color: #718096;
+  padding: 2px; border-radius: 4px; flex-shrink: 0; display: flex; align-items: center;
+}
+.psi-del:hover { color: #EF4444; background: rgba(239,68,68,0.1); }
 
 /* ══════════════════════════════
    사이드 패널

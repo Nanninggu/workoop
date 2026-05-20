@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ptkt.mapper.ScheduleMapper">
+
+    <resultMap id="scheduleMap" type="com.ptkt.model.Schedule">
+        <id     property="id"        column="id"/>
+        <result property="userId"    column="user_id"/>
+        <result property="orgId"     column="org_id"/>
+        <result property="title"     column="title"/>
+        <result property="eventDate" column="event_date"/>
+        <result property="eventTime" column="event_time"/>
+        <result property="source"    column="source"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO schedule (user_id, org_id, title, event_date, event_time, source)
+        VALUES (#{userId}, #{orgId}, #{title}, #{eventDate}, #{eventTime}, #{source})
+    </insert>
+
+    <select id="findByUserAndDateRange" resultMap="scheduleMap">
+        SELECT * FROM schedule
+        WHERE user_id = #{userId}
+          AND event_date BETWEEN #{from} AND #{to}
+        ORDER BY event_date, event_time
+    </select>
+
+    <delete id="deleteById">
+        DELETE FROM schedule WHERE id = #{id}
+    </delete>
+
+</mapper>
