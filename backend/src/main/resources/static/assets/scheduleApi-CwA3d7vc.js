@@ -1,1 +1,0 @@
-import{a as t}from"./axios-LyfDZ_bh.js";const l={list:(e,s)=>t.get("/schedules",{params:{from:e,to:s}}),create:(e,s,a)=>t.post("/schedules",{title:e,eventDate:s,eventTime:a}),remove:e=>t.delete(`/schedules/${e}`)};export{l as s};

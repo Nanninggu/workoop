@@ -62,22 +62,10 @@ public class AiChatService {
         try {
             answer = chatClientBuilder.build()
                     .prompt(prompt)
-                    .functions("sendSlackMessage", "queryDatabase", "queryKnowledgeGraph")
                     .call()
                     .content();
         } catch (Exception e) {
-            log.warn("[AI] Groq 호출 실패: userId={}, error={}", userId, e.getMessage());
-            String msg = e.getMessage() == null ? "" : e.getMessage().toLowerCase();
-            String fallback;
-            if (msg.contains("429") || msg.contains("rate") || msg.contains("limit")) {
-                fallback = "AI 사용량이 많아 잠시 후 다시 시도해주세요. (일시적 요청 제한)";
-            } else if (msg.contains("timeout") || msg.contains("timed out")) {
-                fallback = "AI 응답이 지연되고 있습니다. 잠시 후 다시 시도해주세요.";
-            } else {
-                fallback = "AI 응답 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
-            }
-            saveHistory(userId, "assistant", fallback);
-            return fallback;
+            return handleAiError(userId, e);
         }
 
         saveHistory(userId, "assistant", answer);
@@ -320,13 +308,6 @@ public class AiChatService {
                 아래 [사용자 데이터]를 바탕으로 질문에 친절하고 명확하게 답변해주세요.
                 데이터에 없는 내용은 추측하지 말고 "해당 데이터가 없습니다"라고 답해주세요.
                 답변은 한국어로, 핵심만 간결하게 해주세요.
-
-                [사용 가능한 도구]
-                - sendSlackMessage: 팀원에게 Slack 메시지를 보낼 때 사용. 반드시 1회만 호출하고 결과와 무관하게 재호출 금지.
-                - queryDatabase: H2 DB에서 직접 SQL 조회 (SELECT만 가능). 단순 데이터 조회에 활용.
-                - queryKnowledgeGraph: SPARQL로 지식 그래프 탐색. 복잡한 관계 질문(누가-무엇과-어떻게 연결?)에 활용.
-                  예: "KPI 달성률 낮은 사람의 담당 태스크", "프로젝트별 워크로드 분산", "블로커가 있는 사람 목록"
-                도구 호출 후 결과를 받으면 즉시 최종 답변을 생성하세요. 같은 도구를 반복 호출하지 마세요.
                 """);
         if (!context.isBlank())
             sb.append("\n[사용자 데이터]\n").append(context);
@@ -361,6 +342,21 @@ public class AiChatService {
         } catch (Exception e) {
             log.warn("[AI] 히스토리 저장 실패: {}", e.getMessage());
         }
+    }
+
+    private String handleAiError(Long userId, Exception e) {
+        log.warn("[AI] Groq 호출 실패: userId={}, error={}", userId, e.getMessage());
+        String msg = e.getMessage() == null ? "" : e.getMessage().toLowerCase();
+        String fallback;
+        if (msg.contains("429") || msg.contains("rate") || msg.contains("limit")) {
+            fallback = "AI 사용량이 많아 잠시 후 다시 시도해주세요. (일시적 요청 제한)";
+        } else if (msg.contains("timeout") || msg.contains("timed out")) {
+            fallback = "AI 응답이 지연되고 있습니다. 잠시 후 다시 시도해주세요.";
+        } else {
+            fallback = "AI 응답 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+        }
+        saveHistory(userId, "assistant", fallback);
+        return fallback;
     }
 
     private boolean notBlank(String s) {

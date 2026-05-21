@@ -102,8 +102,15 @@ public class SyncService {
                 String title = n.path("title").asText(null);
                 String date  = n.path("eventDate").asText(null);
                 String time  = n.path("eventTime").asText(null);
-                if (title != null && date != null) {
-                    result.add(new DetectedEvent(title, date, "null".equals(time) ? null : time));
+                boolean validDate = date != null && !date.isBlank() && !"null".equalsIgnoreCase(date);
+                if (title != null && validDate) {
+                    String safeTime = (time == null || "null".equalsIgnoreCase(time)) ? null : time;
+                    try {
+                        LocalDate.parse(date); // YYYY-MM-DD 형식 검증
+                        result.add(new DetectedEvent(title, date, safeTime));
+                    } catch (Exception ignored) {
+                        log.warn("[Sync] 날짜 형식 오류 무시: title={}, date={}", title, date);
+                    }
                 }
             }
             return result;

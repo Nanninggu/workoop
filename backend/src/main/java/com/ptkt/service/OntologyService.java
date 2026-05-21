@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -71,6 +72,15 @@ public class OntologyService {
         log.info("[Ontology] 동기화 완료: user={}, org={}, project={}, task={}, kpi={}, scrum={} ({}ms)",
                 users, orgs, projs, tasks, kpis, scrums, elapsed);
         return new SyncStats(users, orgs, projs, tasks, kpis, scrums, (int) model.size());
+    }
+
+    @Async
+    public void syncAllAsync() {
+        try {
+            syncAll();
+        } catch (Exception e) {
+            log.warn("[Ontology] 비동기 동기화 실패: {}", e.getMessage());
+        }
     }
 
     // ── SPARQL SELECT 쿼리 ───────────────────────────────────

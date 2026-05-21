@@ -5,6 +5,7 @@ import com.ptkt.dto.WsEvent;
 import com.ptkt.mapper.ScrumMapper;
 import com.ptkt.model.Scrum;
 import com.ptkt.model.User;
+import com.ptkt.service.OntologyService;
 import com.ptkt.service.RealtimeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +23,7 @@ public class ScrumController {
 
     private final ScrumMapper scrumMapper;
     private final RealtimeService realtimeService;
+    private final OntologyService ontologyService;
 
     @PostMapping
     public ResponseEntity<ApiResponse<Void>> upsert(
@@ -45,6 +47,7 @@ public class ScrumController {
                 .build();
 
         scrumMapper.upsert(scrum);
+        ontologyService.syncAllAsync();
 
         // 같은 조직 팀원들에게 실시간 업데이트 전파
         realtimeService.broadcastToOrg(orgId, "scrums", WsEvent.builder()

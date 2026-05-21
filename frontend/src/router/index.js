@@ -9,7 +9,7 @@ const routes = [
     component: () => import('@/components/layout/AppLayout.vue'),
     meta: { public: false },
     children: [
-      { path: '',           redirect: '/dashboard' },
+      { path: '',           redirect: '/scrum' },
       { path: 'dashboard',       name: 'Dashboard',       component: () => import('@/views/DashboardView.vue'),       meta: { title: '대시보드' } },
       { path: 'team-dashboard',  name: 'TeamDashboard',   component: () => import('@/views/TeamDashboardView.vue'),   meta: { title: '팀 대시보드' } },
       { path: 'projects',   name: 'Projects',   component: () => import('@/views/ProjectListView.vue'), meta: { title: '프로젝트' } },
@@ -44,7 +44,7 @@ router.beforeEach((to) => {
     return { path: '/login', query: { redirect: to.fullPath } }
   }
   if (isPublic && token && (to.path === '/login' || to.path === '/signup')) {
-    return { path: '/dashboard' }
+    return { path: '/scrum' }
   }
 })
 

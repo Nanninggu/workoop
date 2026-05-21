@@ -15,69 +15,71 @@
 
       <!-- 메시지 목록 -->
       <div class="chat-messages" ref="listRef">
-        <div v-if="store.loading" class="chat-state">
-          <Loader2 :size="18" class="spin" />
-          <span>불러오는 중...</span>
-        </div>
-
-        <template v-else>
-          <div v-if="(aiMode ? aiMessages.length === 0 : store.messages.length === 0)" class="chat-state">
-            <MessageSquare :size="28" style="opacity:0.15" />
-            <p>첫 메시지를 보내보세요</p>
+        <div class="chat-content">
+          <div v-if="store.loading" class="chat-state">
+            <Loader2 :size="18" class="spin" />
+            <span>불러오는 중...</span>
           </div>
 
           <template v-else>
-            <!-- 날짜 구분선 + 메시지 그룹 -->
-            <template v-for="(group, gi) in groupedMessages" :key="gi">
-              <div class="chat-date-divider">
-                <span>{{ group.date }}</span>
-              </div>
-              <template v-for="(msg, mi) in group.messages" :key="msg.id ?? ('ai-' + mi)">
-                <!-- AI 메시지 -->
-                <div v-if="msg.isAi" class="chat-msg ai-msg">
-                  <div class="chat-avatar ai-avatar">
-                    <Bot :size="13" />
-                  </div>
-                  <div class="chat-bubble-wrap">
-                    <span class="chat-name">Workoop AI</span>
-                    <div class="chat-bubble ai-bubble">{{ msg.content }}</div>
-                    <span class="chat-time">{{ formatTime(msg.createdAt) }}</span>
-                  </div>
-                </div>
+            <div v-if="(aiMode ? aiMessages.length === 0 : store.messages.length === 0)" class="chat-state">
+              <MessageSquare :size="28" style="opacity:0.15" />
+              <p>첫 메시지를 보내보세요</p>
+            </div>
 
-                <!-- 일반 메시지 -->
-                <div
-                  v-else
-                  class="chat-msg"
-                  :class="{
-                    mine: msg.userId === myId,
-                    'cont': mi > 0 && !group.messages[mi-1].isAi && group.messages[mi-1].userId === msg.userId
-                  }"
-                >
+            <template v-else>
+              <!-- 날짜 구분선 + 메시지 그룹 -->
+              <template v-for="(group, gi) in groupedMessages" :key="gi">
+                <div class="chat-date-divider">
+                  <span>{{ group.date }}</span>
+                </div>
+                <template v-for="(msg, mi) in group.messages" :key="msg.id ?? ('ai-' + mi)">
+                  <!-- AI 메시지 -->
+                  <div v-if="msg.isAi" class="chat-msg ai-msg">
+                    <div class="chat-avatar ai-avatar">
+                      <Bot :size="13" />
+                    </div>
+                    <div class="chat-bubble-wrap">
+                      <span class="chat-name">Workoop AI</span>
+                      <div class="chat-bubble ai-bubble">{{ msg.content }}</div>
+                      <span class="chat-time">{{ formatTime(msg.createdAt) }}</span>
+                    </div>
+                  </div>
+
+                  <!-- 일반 메시지 -->
                   <div
-                    v-if="msg.userId !== myId"
-                    class="chat-avatar"
-                    :class="{ invisible: mi > 0 && !group.messages[mi-1].isAi && group.messages[mi-1].userId === msg.userId }"
+                    v-else
+                    class="chat-msg"
+                    :class="{
+                      mine: msg.userId === myId,
+                      'cont': mi > 0 && !group.messages[mi-1].isAi && group.messages[mi-1].userId === msg.userId
+                    }"
                   >
-                    {{ (msg.userName || '?').charAt(0).toUpperCase() }}
-                  </div>
+                    <div
+                      v-if="msg.userId !== myId"
+                      class="chat-avatar"
+                      :class="{ invisible: mi > 0 && !group.messages[mi-1].isAi && group.messages[mi-1].userId === msg.userId }"
+                    >
+                      {{ (msg.userName || '?').charAt(0).toUpperCase() }}
+                    </div>
 
-                  <div class="chat-bubble-wrap">
-                    <span
-                      v-if="msg.userId !== myId && (mi === 0 || group.messages[mi-1].isAi || group.messages[mi-1].userId !== msg.userId)"
-                      class="chat-name"
-                    >{{ msg.userName }}</span>
-                    <div class="chat-bubble">{{ msg.content }}</div>
-                    <span
-                      v-if="mi === group.messages.length - 1 || group.messages[mi+1].isAi || group.messages[mi+1].userId !== msg.userId"
-                      class="chat-time"
-                    >{{ formatTime(msg.createdAt) }}</span>
+                    <div class="chat-bubble-wrap">
+                      <span
+                        v-if="msg.userId !== myId && (mi === 0 || group.messages[mi-1].isAi || group.messages[mi-1].userId !== msg.userId)"
+                        class="chat-name"
+                      >{{ msg.userName }}</span>
+                      <div class="chat-bubble">{{ msg.content }}</div>
+                      <span
+                        v-if="mi === group.messages.length - 1 || group.messages[mi+1].isAi || group.messages[mi+1].userId !== msg.userId"
+                        class="chat-time"
+                      >{{ formatTime(msg.createdAt) }}</span>
+                    </div>
                   </div>
-                </div>
+                </template>
               </template>
             </template>
           </template>
-        </template>
+        </div>
       </div>
 
       <!-- AI 응답 대기 중 -->
@@ -376,20 +378,25 @@ watch(() => props.open, async (val) => {
 }
 .chat-close-btn:hover { background: rgba(255,255,255,0.09); color: #94A3B8; }
 
-/* 메시지 영역 — 아래부터 쌓이게 */
+/* 메시지 영역 — 스크롤 컨테이너 */
 .chat-messages {
   flex: 1;
   overflow-y: auto;
-  padding: 16px 10px 8px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end; /* ← 핵심: 메시지를 아래 정렬 */
-  gap: 2px;
   min-height: 0;
 }
 .chat-messages::-webkit-scrollbar { width: 3px; }
 .chat-messages::-webkit-scrollbar-track { background: transparent; }
 .chat-messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.07); border-radius: 3px; }
+
+/* 내부 정렬 컨테이너 — 메시지 적을 땐 아래 정렬, 많을 땐 스크롤 */
+.chat-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 100%;
+  padding: 16px 10px 8px;
+  gap: 2px;
+}
 
 /* 로딩/빈 상태 */
 .chat-state {

@@ -1365,7 +1365,7 @@ async function syncSlack() {
     // 스크럼 태스크 갱신
     try {
       const scrumRes = await scrumApi.me(today.value)
-      if (scrumRes?.tasksJson) todayTasks.value = JSON.parse(scrumRes.tasksJson)
+      if (scrumRes?.data?.tasksJson) todayTasks.value = JSON.parse(scrumRes.data.tasksJson)
     } catch (e) { console.error('스크럼 갱신 실패', e) }
 
     // 감지된 일정이 있으면 확인 모달
@@ -1406,6 +1406,12 @@ async function confirmEvents() {
 
   pendingEvents.value = []
   showSyncToast(`일정 ${selected.length}개가 캘린더 및 해당 날짜 스크럼에 등록됐습니다.`, 'success')
+
+  // 현재 뷰에 표시 중인 날짜(어제/오늘/내일)에 등록된 일정이 있으면 즉시 갱신
+  const affectedDates = new Set(selected.map(ev => ev.eventDate))
+  if ([yesterday.value, today.value, tomorrow.value].some(d => affectedDates.has(d))) {
+    await loadAll()
+  }
 }
 
 // ── CSV 내보내기 ──

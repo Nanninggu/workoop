@@ -627,14 +627,20 @@ onMounted(loadData)
 .schedule-dot { width: 5px; height: 5px; border-radius: 50%; background: #E01E5A; flex-shrink: 0; }
 
 /* ── 패널 일정 ── */
+.panel-section-title {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 0.72rem; font-weight: 700; color: #E01E5A;
+  text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px;
+}
 .panel-schedule-item {
   display: flex; align-items: center; justify-content: space-between;
-  background: rgba(224,30,90,0.07); border: 1px solid rgba(224,30,90,0.2);
+  background: rgba(224,30,90,0.08); border: 1px solid rgba(224,30,90,0.25);
   border-radius: 7px; padding: 8px 10px;
 }
 .psi-info { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .psi-time { font-size: 11px; font-weight: 700; color: #E01E5A; flex-shrink: 0; }
-.psi-title { font-size: 12px; color: #E2E8F0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.psi-title { font-size: 12px; font-weight: 500; color: #2D3748; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+html.dark .psi-title { color: #E2E8F0; }
 .psi-del {
   background: none; border: none; cursor: pointer; color: #718096;
   padding: 2px; border-radius: 4px; flex-shrink: 0; display: flex; align-items: center;

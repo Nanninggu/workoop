@@ -33,11 +33,32 @@ public class ScheduleController {
     public ResponseEntity<ApiResponse<Schedule>> create(
             @AuthenticationPrincipal User user,
             @RequestBody Map<String, Object> body) {
+        String title = (String) body.get("title");
+        String eventDateStr = (String) body.get("eventDate");
+
+        if (title == null || title.isBlank()) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("title은 필수입니다."));
+        }
+        if (eventDateStr == null || eventDateStr.isBlank() || "null".equalsIgnoreCase(eventDateStr)) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("eventDate는 필수입니다 (YYYY-MM-DD)."));
+        }
+
+        LocalDate eventDate;
+        try {
+            eventDate = LocalDate.parse(eventDateStr);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("eventDate 형식 오류 (YYYY-MM-DD 필요): " + eventDateStr));
+        }
+
+        String eventTime = (String) body.get("eventTime");
+        if ("null".equalsIgnoreCase(eventTime)) eventTime = null;
+
         Schedule s = new Schedule();
         s.setUserId(user.getId());
-        s.setTitle((String) body.get("title"));
-        s.setEventDate(LocalDate.parse((String) body.get("eventDate")));
-        s.setEventTime((String) body.getOrDefault("eventTime", null));
+        s.setTitle(title);
+        s.setEventDate(eventDate);
+        s.setEventTime(eventTime);
         s.setSource("SLACK");
         scheduleMapper.insert(s);
         return ResponseEntity.ok(ApiResponse.ok(s));
