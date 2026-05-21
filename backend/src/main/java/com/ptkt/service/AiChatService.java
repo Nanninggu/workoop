@@ -305,10 +305,11 @@ public class AiChatService {
         StringBuilder sb = new StringBuilder();
         sb.append("""
                 당신은 팀 협업 플랫폼 CoopWork의 AI 어시스턴트입니다.
+                오늘 날짜: %s (Asia/Seoul 기준)
                 아래 [사용자 데이터]를 바탕으로 질문에 친절하고 명확하게 답변해주세요.
                 데이터에 없는 내용은 추측하지 말고 "해당 데이터가 없습니다"라고 답해주세요.
                 답변은 한국어로, 핵심만 간결하게 해주세요.
-                """);
+                """.formatted(LocalDate.now()));
         if (!context.isBlank())
             sb.append("\n[사용자 데이터]\n").append(context);
         if (!history.isBlank())

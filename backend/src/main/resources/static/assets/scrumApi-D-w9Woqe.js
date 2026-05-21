@@ -1,1 +1,0 @@
-import{a}from"./axios-CXG7I55E.js";const e={save:s=>a.post("/scrums",s),me:s=>a.get("/scrums/me",{params:{date:s}}),range:(s,m)=>a.get("/scrums/me/range",{params:{startDate:s,endDate:m}}),team:(s,m)=>a.get("/scrums/team",{params:{orgId:s,date:m}})},c={slack:s=>a.post("/sync/slack",{orgId:s})};export{c as a,e as s};

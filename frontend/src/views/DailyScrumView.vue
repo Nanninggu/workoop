@@ -1504,6 +1504,12 @@ function onKeyDown(e) {
   }
 }
 
+function onVisibilityChange() {
+  if (!document.hidden && dayjs().format('YYYY-MM-DD') !== realToday) {
+    window.location.reload()
+  }
+}
+
 onMounted(async () => {
   // 캘린더에서 날짜를 지정해서 이동한 경우
   const queryDate = route.query.date
@@ -1515,9 +1521,11 @@ onMounted(async () => {
   if (!store.kpis?.length) await store.fetchKpis()
   loadDailyKpiRecords()
   document.addEventListener('keydown', onKeyDown)
+  document.addEventListener('visibilitychange', onVisibilityChange)
 })
 onUnmounted(() => {
   document.removeEventListener('keydown', onKeyDown)
+  document.removeEventListener('visibilitychange', onVisibilityChange)
 })
 </script>
 
